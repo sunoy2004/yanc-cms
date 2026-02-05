@@ -1,0 +1,298 @@
+ /* ============================================
+    YANC CMS Component Styles
+    Reusable component classes
+    ============================================ */
+ 
+ /* Card System */
+ .cms-card {
+   background: hsl(var(--card));
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   transition: all 0.3s ease;
+   box-shadow: var(--shadow-sm);
+ }
+ 
+ .cms-card:hover {
+   box-shadow: var(--shadow-md);
+ }
+ 
+ .cms-card-elevated {
+   background: hsl(var(--card));
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   box-shadow: var(--shadow-md);
+   transition: all 0.3s ease;
+ }
+ 
+ .cms-card-elevated:hover {
+   box-shadow: var(--shadow-lg);
+ }
+ 
+ .cms-card-header {
+   padding: 1.25rem 1.5rem;
+   border-bottom: 1px solid hsl(var(--border) / 0.8);
+ }
+ 
+ .cms-card-content {
+   padding: 1.5rem;
+ }
+ 
+ .cms-stat-card {
+   background: hsl(var(--card));
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   padding: 1.5rem;
+   display: flex;
+   flex-direction: column;
+   gap: 0.75rem;
+   position: relative;
+   overflow: hidden;
+   transition: all 0.3s ease;
+   box-shadow: var(--shadow-sm);
+ }
+ 
+ .cms-stat-card::before {
+   content: '';
+   position: absolute;
+   inset: 0;
+   opacity: 0;
+   transition: opacity 0.3s ease;
+   background: linear-gradient(135deg, hsl(var(--accent) / 0.03) 0%, transparent 60%);
+ }
+ 
+ .cms-stat-card:hover {
+   box-shadow: var(--shadow-md);
+ }
+ 
+ .cms-stat-card:hover::before {
+   opacity: 1;
+ }
+ 
+ /* Typography Components */
+ .cms-section-title {
+   font-size: 1.125rem;
+   font-weight: 600;
+   color: hsl(var(--foreground));
+   letter-spacing: -0.01em;
+ }
+ 
+ .cms-section-description {
+   font-size: 0.875rem;
+   color: hsl(var(--muted-foreground));
+   line-height: 1.6;
+ }
+ 
+ /* Badge System */
+ .cms-badge {
+   display: inline-flex;
+   align-items: center;
+   padding: 0.25rem 0.625rem;
+   border-radius: 9999px;
+   font-size: 0.75rem;
+   font-weight: 500;
+   transition: colors 0.2s ease;
+ }
+ 
+ .cms-badge-success {
+   background: hsl(var(--success) / 0.1);
+   color: hsl(var(--success));
+ }
+ 
+ .cms-badge-warning {
+   background: hsl(var(--warning) / 0.1);
+   color: hsl(var(--warning));
+ }
+ 
+ .cms-badge-destructive {
+   background: hsl(var(--destructive) / 0.1);
+   color: hsl(var(--destructive));
+ }
+ 
+ .cms-badge-muted {
+   background: hsl(var(--muted));
+   color: hsl(var(--muted-foreground));
+ }
+ 
+ .cms-badge-info {
+   background: hsl(var(--info) / 0.1);
+   color: hsl(var(--info));
+ }
+ 
+ .cms-badge-accent {
+   background: hsl(var(--accent) / 0.1);
+   color: hsl(var(--accent));
+ }
+ 
+ /* Interactive Cards */
+ .cms-interactive-card {
+   background: hsl(var(--card));
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   cursor: pointer;
+   transition: all 0.3s ease;
+   box-shadow: var(--shadow-sm);
+ }
+ 
+ .cms-interactive-card:hover {
+   border-color: hsl(var(--accent) / 0.3);
+   box-shadow: var(--shadow-md);
+ }
+ 
+ .cms-interactive-card:active {
+   transform: scale(0.99);
+ }
+ 
+ /* Quick Action Button */
+ .cms-quick-action {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.75rem;
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   padding: 1.25rem;
+   text-align: center;
+   transition: all 0.3s ease;
+   cursor: pointer;
+   background: hsl(var(--card));
+ }
+ 
+ .cms-quick-action:hover {
+   border-color: hsl(var(--accent) / 0.4);
+   background: hsl(var(--accent) / 0.05);
+   box-shadow: var(--shadow-md);
+   transform: translateY(-2px);
+ }
+ 
+ .cms-quick-action:active {
+   transform: translateY(0);
+ }
+ 
+ /* Icon Container */
+ .cms-icon-container {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   border-radius: 0.75rem;
+   transition: all 0.3s ease;
+ }
+ 
+ .cms-icon-container-sm { width: 2.25rem; height: 2.25rem; }
+ .cms-icon-container-md { width: 2.75rem; height: 2.75rem; }
+ .cms-icon-container-lg { width: 3.5rem; height: 3.5rem; }
+ 
+ .cms-icon-primary {
+   background: hsl(var(--primary) / 0.1);
+   color: hsl(var(--primary));
+ }
+ 
+ .cms-icon-accent {
+   background: hsl(var(--accent) / 0.1);
+   color: hsl(var(--accent));
+ }
+ 
+ /* Media & Gallery Components */
+ .cms-media-item {
+   position: relative;
+   aspect-ratio: 1;
+   cursor: pointer;
+   overflow: hidden;
+   border-radius: 0.75rem;
+   border: 1px solid hsl(var(--border));
+   background: hsl(var(--muted));
+   transition: all 0.3s ease;
+ }
+ 
+ .cms-media-item:hover {
+   border-color: hsl(var(--accent) / 0.4);
+   box-shadow: var(--shadow-md);
+   transform: scale(1.02);
+ }
+ 
+ .cms-media-item-selected {
+   ring: 2px solid hsl(var(--accent));
+   ring-offset: 2px;
+ }
+ 
+ .cms-media-overlay {
+   position: absolute;
+   inset: 0;
+   top: auto;
+   background: linear-gradient(to top, hsl(0 0% 0% / 0.7), hsl(0 0% 0% / 0.3), transparent);
+   padding: 0.75rem;
+   transition: opacity 0.3s ease;
+ }
+ 
+ /* List Items */
+ .cms-list-item {
+   display: flex;
+   align-items: flex-start;
+   gap: 1rem;
+   border-radius: 0.75rem;
+   padding: 1rem;
+   transition: all 0.2s ease;
+ }
+ 
+ .cms-list-item:hover {
+   background: hsl(var(--muted) / 0.6);
+ }
+ 
+ .cms-list-item-active {
+   background: hsl(var(--accent) / 0.05);
+   border-left: 2px solid hsl(var(--accent));
+ }
+ 
+ /* Form Enhancements */
+ .cms-input-group {
+   display: flex;
+   flex-direction: column;
+   gap: 0.5rem;
+ }
+ 
+ .cms-input-label {
+   font-size: 0.875rem;
+   font-weight: 500;
+   color: hsl(var(--foreground));
+ }
+ 
+ .cms-input-hint {
+   font-size: 0.75rem;
+   color: hsl(var(--muted-foreground));
+   margin-top: 0.375rem;
+ }
+ 
+ /* Focus States */
+ .focus-ring:focus-visible {
+   outline: none;
+   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+ }
+ 
+ .focus-ring-accent:focus-visible {
+   outline: none;
+   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--accent));
+ }
+ 
+ /* Gradient Backgrounds */
+ .bg-gradient-primary {
+   background: var(--gradient-primary);
+ }
+ 
+ .bg-gradient-accent {
+   background: var(--gradient-accent);
+ }
+ 
+ .bg-gradient-surface {
+   background: var(--gradient-surface);
+ }
+ 
+ /* Text Utilities */
+ .text-gradient-accent {
+   background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(171 65% 55%) 100%);
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+   background-clip: text;
+ }
+ 
+ .text-balance {
+   text-wrap: balance;
+ }
