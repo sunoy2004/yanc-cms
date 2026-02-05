@@ -114,7 +114,7 @@
                  <Input
                    id="email"
                    type="email"
-                   placeholder="admin@yanc.com"
+                   placeholder="admin@yanc.in"
                    value={email}
                    onChange={(e) => setEmail(e.target.value)}
                    className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
@@ -158,7 +158,7 @@
            <div className="mt-10 rounded-xl border border-border/60 bg-muted/30 p-5">
              <p className="text-sm font-semibold text-foreground">Demo Credentials</p>
              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-               Email: admin@yanc.com
+               Email: admin@yanc.in
                <br />
                Password: admin123
              </p>

@@ -57,10 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulated login for demo - replace with actual API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (email === 'admin@yanc.com' && password === 'admin123') {
+      if (email === 'admin@yanc.in' && password === 'admin123') {
         const user: User = {
           id: '1',
-          email: 'admin@yanc.com',
+          email: 'admin@yanc.in',
           name: 'Admin User',
           role: 'admin',
         };

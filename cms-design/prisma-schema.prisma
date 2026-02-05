@@ -1,0 +1,254 @@
+// YANC CMS Database Schema with Google Drive Integration
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core Models
+model HeroContent {
+  id          String        @id @default(cuid())
+  title       String
+  subtitle    String?
+  ctaText     String?
+  ctaUrl      String?
+  mediaItems  HeroMediaItem[]
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model SectionContent {
+  id          String   @id @default(cuid())
+  sectionName String   @unique
+  title       String?
+  subtitle    String?
+  description String?
+  content     Json?    // Flexible JSON field for section-specific content
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HeroMediaItem {
+  id         String      @id @default(cuid())
+  heroId     String
+  hero       HeroContent @relation(fields: [heroId], references: [id])
+  type       MediaType
+  url        String      // Google Drive shareable link
+  altText    String
+  order      Int
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Program {
+  id          String           @id @default(cuid())
+  title       String
+  description String
+  icon        String
+  order       Int
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  mentorTalks MentorTalk[]
+}
+
+model MentorTalk {
+  id          String         @id @default(cuid())
+  programId   String
+  program     Program        @relation(fields: [programId], references: [id])
+  title       String
+  speaker     String
+  date        DateTime
+  description String
+  videoUrl    String?         // Google Drive shareable link
+  thumbnail   String?         // Google Drive shareable link
+  gallery     MentorTalkGallery[]
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model MentorTalkGallery {
+  id           String     @id @default(cuid())
+  mentorTalkId String
+  mentorTalk   MentorTalk @relation(fields: [mentorTalkId], references: [id])
+  imageUrl     String     // Google Drive shareable link
+  caption      String?
+  order        Int
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Event {
+  id        String        @id @default(cuid())
+  title     String
+  date      DateTime
+  location  String
+  imageUrl  String        // Google Drive shareable link
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  galleries EventGallery[]
+}
+
+model EventGallery {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  title     String
+  date      DateTime
+  images    EventImage[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventImage {
+  id           String      @id @default(cuid())
+  eventGalleryId String
+  eventGallery EventGallery @relation(fields: [eventGalleryId], references: [id])
+  imageUrl     String      // Google Drive shareable link
+  caption      String?
+  order        Int
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model MediaItem {
+  id           String      @id @default(cuid())
+  type         MediaType
+  url          String      // Google Drive shareable link
+  altText      String?
+  caption      String?
+  order        Int
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model TeamMember {
+  id          String      @id @default(cuid())
+  name        String
+  role        String
+  title       String?
+  bio         String?
+  imageUrl    String      // Google Drive shareable link
+  order       Int
+  socialLinks SocialLink?
+  type        MemberType  @default(REGULAR)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model SocialLink {
+  id           String      @id @default(cuid())
+  teamMemberId String?
+  teamMember   TeamMember? @relation(fields: [teamMemberId], references: [id])
+  founderId    String?
+  founder      Founder?    @relation(fields: [founderId], references: [id])
+  linkedin     String?
+  twitter      String?
+  github       String?
+  website      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Founder {
+  id          String      @id @default(cuid())
+  name        String
+  title       String
+  bio         String
+  imageUrl    String      // Google Drive shareable link
+  order       Int
+  socialLinks SocialLink?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  quote     String
+  author    String
+  company   String
+  imageUrl  String      // Google Drive shareable link
+  order     Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AboutUs {
+  id          String   @id @default(cuid())
+  headline    String
+  description String
+  visionTitle String
+  visionDesc  String
+  missionTitle String
+  missionDesc String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactInfo {
+  id           String   @id @default(cuid())
+  email        String
+  phone        String?
+  address      String?
+  linkedin     String?
+  twitter      String?
+  instagram    String?
+  facebook     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Enums
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum MemberType {
+  REGULAR
+  FOUNDER
+  ADVISOR
+  MENTOR
+}
+
+// Relations
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          UserRole  @default(ADMIN)
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+}

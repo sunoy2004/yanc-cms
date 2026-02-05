@@ -1,11 +1,11 @@
- @tailwind base;
- @tailwind components;
- @tailwind utilities;
- 
  /* Import modular styles */
  @import './styles/design-tokens.css';
  @import './styles/animations.css';
  @import './styles/components.css';
+ 
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
  
  /* ============================================
     YANC CMS Admin Design System
