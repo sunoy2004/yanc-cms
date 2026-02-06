@@ -4,6 +4,7 @@ import { Upload, X, Image as ImageIcon, Film, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MediaItem } from '@/types/cms';
+import { apiService } from '@/services/api';
 
 interface MediaUploaderProps {
   value: MediaItem[];
@@ -41,29 +42,30 @@ export function MediaUploader({
       setIsUploading(true);
 
       try {
-        // TODO: Replace with actual upload to backend
-        // const formData = new FormData();
-        // acceptedFiles.forEach(file => formData.append('files', file));
-        // const response = await fetch('/api/media/google-drive', {
-        //   method: 'POST',
-        //   body: formData,
-        // });
+        // Upload files to backend and Google Drive
+        const uploadPromises = acceptedFiles.map(async (file) => {
+          try {
+            const result = await apiService.uploadMedia(file);
+            return {
+              id: result.id,
+              url: result.driveUrl || `https://drive.google.com/file/d/${result.driveId}/view`,
+              type: result.mimeType.startsWith('video') ? 'video' : 'image',
+              alt: result.name,
+              order: value.length,
+              createdAt: result.createdAt,
+              driveId: result.driveId,
+            } as MediaItem;
+          } catch (error) {
+            console.error(`Failed to upload ${file.name}:`, error);
+            throw error;
+          }
+        });
 
-        // Simulated upload for demo
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        const newItems: MediaItem[] = acceptedFiles.map((file, index) => ({
-          id: `temp-${Date.now()}-${index}`,
-          url: URL.createObjectURL(file),
-          type: file.type.startsWith('video') ? 'video' : 'image',
-          alt: file.name,
-          order: value.length + index,
-          createdAt: new Date().toISOString(),
-        }));
-
+        const newItems = await Promise.all(uploadPromises);
         onChange([...value, ...newItems]);
       } catch (error) {
         console.error('Upload failed:', error);
+        alert('Upload failed. Please try again.');
       } finally {
         setIsUploading(false);
       }

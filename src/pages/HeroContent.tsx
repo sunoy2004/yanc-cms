@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/cms/PageHeader';
 import { DataTable, Column } from '@/components/cms/DataTable';
 import { PublishToggle } from '@/components/cms/PublishToggle';
@@ -18,6 +18,7 @@ import { Plus, GripVertical, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { HeroContent, MediaItem } from '@/types/cms';
 import { cn } from '@/lib/utils';
+import { apiService } from '@/services/api';
 
 // Mock data - replace with API calls
 const mockHeroItems: HeroContent[] = [
@@ -61,10 +62,36 @@ const mockHeroItems: HeroContent[] = [
 
 export default function HeroContentPage() {
   const { toast } = useToast();
-  const [heroItems, setHeroItems] = useState<HeroContent[]>(mockHeroItems);
+  const [heroItems, setHeroItems] = useState<HeroContent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<HeroContent | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load hero content on mount
+  useEffect(() => {
+    loadHeroContent();
+  }, []);
+
+  const loadHeroContent = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiService.getHeroContent();
+      // Convert single hero content to array for DataTable
+      setHeroItems(data ? [data] : []);
+    } catch (error) {
+      console.error('Failed to load hero content:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load hero content. Using mock data.',
+        variant: 'destructive',
+      });
+      // Fallback to mock data
+      setHeroItems(mockHeroItems);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -158,45 +185,63 @@ export default function HeroContentPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (item: HeroContent) => {
+  const handleDelete = async (item: HeroContent) => {
     if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
-      setHeroItems((prev) => prev.filter((i) => i.id !== item.id));
+      try {
+        await apiService.deleteHeroContent(item.id);
+        setHeroItems((prev) => prev.filter((i) => i.id !== item.id));
+        toast({
+          title: 'Hero content deleted',
+          description: 'The hero content has been removed.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete hero content.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleTogglePublish = async (item: HeroContent) => {
+    try {
+      const updatedItem = await apiService.updateHeroContent(item.id, {
+        ...item,
+        isActive: !item.isActive,
+      });
+      
+      setHeroItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id ? { ...updatedItem } : i
+        )
+      );
+      
       toast({
-        title: 'Hero content deleted',
-        description: 'The hero content has been removed.',
+        title: updatedItem.isActive ? 'Content published' : 'Content unpublished',
+        description: `"${item.title}" is now ${updatedItem.isActive ? 'active' : 'inactive'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update content status.',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleTogglePublish = (item: HeroContent) => {
-    setHeroItems((prev) =>
-      prev.map((i) =>
-        i.id === item.id ? { ...i, isActive: !i.isActive } : i
-      )
-    );
-    toast({
-      title: item.isActive ? 'Content unpublished' : 'Content published',
-      description: `"${item.title}" is now ${item.isActive ? 'inactive' : 'active'}.`,
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSaving(true);
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (editingItem) {
+        // Update existing item
+        const updatedItem = await apiService.updateHeroContent(editingItem.id, formData);
         setHeroItems((prev) =>
           prev.map((i) =>
             i.id === editingItem.id
-              ? {
-                  ...i,
-                  ...formData,
-                  updatedAt: new Date().toISOString(),
-                }
+              ? { ...updatedItem }
               : i
           )
         );
@@ -205,13 +250,11 @@ export default function HeroContentPage() {
           description: 'Your changes have been saved.',
         });
       } else {
-        const newItem: HeroContent = {
-          id: `temp-${Date.now()}`,
+        // Create new item
+        const newItem = await apiService.createHeroContent({
           ...formData,
           order: heroItems.length + 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        });
         setHeroItems((prev) => [...prev, newItem]);
         toast({
           title: 'Hero content created',
@@ -227,7 +270,7 @@ export default function HeroContentPage() {
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -257,6 +300,7 @@ export default function HeroContentPage() {
         isPublished={(item) => item.isActive}
         searchPlaceholder="Search hero content..."
         emptyMessage="No hero content found. Create your first hero section."
+        isLoading={isLoading}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -350,8 +394,8 @@ export default function HeroContentPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...

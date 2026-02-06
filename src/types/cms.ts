@@ -130,6 +130,9 @@ export interface MediaItem {
   thumbnailUrl?: string;
   order: number;
   createdAt: string;
+  driveId?: string;
+  mimeType?: string;
+  storageType?: 'google_drive' | 'local';
 }
 
 export interface MediaLibraryItem extends MediaItem {

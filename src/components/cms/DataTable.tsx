@@ -62,7 +62,7 @@ export function DataTable<T extends { id: string }>({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const filteredData = data.filter((item) =>
+  const filteredData = (data || []).filter((item) =>
     JSON.stringify(item).toLowerCase().includes(search.toLowerCase())
   );
 
