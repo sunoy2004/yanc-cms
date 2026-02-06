@@ -39,7 +39,15 @@ export class MediaService {
       }
       
       this.logger.log(`✅ Media created successfully: ${result.id}`);
-      return result;
+      return {
+        id: result.id,
+        name: result.name,
+        driveUrl: `https://drive.google.com/file/d/${result.drive_id}/view`,
+        mimeType: result.mime_type,
+        storageType: result.storage_type,
+        driveId: result.drive_id,
+        createdAt: result.created_at,
+      };
     } catch (error) {
       this.logger.error('❌ Error creating media record:', error);
       throw error;
@@ -71,9 +79,13 @@ export class MediaService {
       this.logger.log(`✅ Media record created: ${mediaItem.id}`);
       
       return {
-        ...mediaItem,
+        id: mediaItem.id,
+        name: mediaItem.name,
         driveUrl: uploadResult.url,
+        mimeType: mediaItem.mimeType,
         storageType: mediaItem.storageType,
+        driveId: mediaItem.driveId,
+        createdAt: mediaItem.createdAt,
       };
     } catch (error) {
       this.logger.error('❌ Critical error in upload pipeline:', error);
@@ -117,7 +129,16 @@ export class MediaService {
       }
       
       this.logger.log(`✅ Retrieved ${result.length} media items`);
-      return result;
+      // Transform snake_case fields to camelCase for frontend compatibility
+      return result.map(item => ({
+        id: item.id,
+        name: item.name,
+        driveId: item.drive_id,
+        mimeType: item.mime_type,
+        driveUrl: `https://drive.google.com/file/d/${item.drive_id}/view`,
+        storageType: item.storage_type,
+        createdAt: item.created_at,
+      }));
     } catch (error) {
       this.logger.error('❌ Error retrieving media:', error);
       throw error;
@@ -169,7 +190,16 @@ export class MediaService {
       }
       
       this.logger.log(`✅ Media deleted from database: ${id}`);
-      return result;
+      // Transform snake_case fields to camelCase for frontend compatibility
+      return {
+        id: result.id,
+        name: result.name,
+        driveId: result.drive_id,
+        mimeType: result.mime_type,
+        driveUrl: `https://drive.google.com/file/d/${result.drive_id}/view`,
+        storageType: result.storage_type,
+        createdAt: result.created_at,
+      };
     } catch (error) {
       this.logger.error(`❌ Error deleting media ${id}:`, error);
       throw error;

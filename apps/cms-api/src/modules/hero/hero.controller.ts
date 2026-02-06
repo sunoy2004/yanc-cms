@@ -1,5 +1,6 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Logger } from '@nestjs/common';
 import { HeroService } from './hero.service';
+import { CreateHeroDto } from '../../dtos/hero.dto';
 
 @Controller('hero')
 export class HeroController {
@@ -28,5 +29,17 @@ export class HeroController {
     }
 
     return content;
+  }
+
+  @Post()
+  async createHeroContent(@Body() createHeroDto: CreateHeroDto) {
+    this.logger.log('Creating hero content');
+    try {
+      const content = await this.heroService.createHeroContent(createHeroDto);
+      return content;
+    } catch (error) {
+      this.logger.error('Error creating hero content:', error);
+      throw error;
+    }
   }
 }

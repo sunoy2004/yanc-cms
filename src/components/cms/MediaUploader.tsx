@@ -43,26 +43,62 @@ export function MediaUploader({
 
       try {
         // Upload files to backend and Google Drive
-        const uploadPromises = acceptedFiles.map(async (file) => {
-          try {
-            const result = await apiService.uploadMedia(file);
-            return {
-              id: result.id,
-              url: result.driveUrl || `https://drive.google.com/file/d/${result.driveId}/view`,
-              type: result.mimeType.startsWith('video') ? 'video' : 'image',
-              alt: result.name,
-              order: value.length,
-              createdAt: result.createdAt,
-              driveId: result.driveId,
-            } as MediaItem;
-          } catch (error) {
-            console.error(`Failed to upload ${file.name}:`, error);
-            throw error;
+        const uploadResults = await Promise.allSettled(
+          acceptedFiles.map(async (file) => {
+            try {
+              const result = await apiService.uploadMedia(file);
+              
+              // Defensive guards
+              if (!result) {
+                throw new Error('Upload returned no result');
+              }
+              
+              if (!result.mimeType) {
+                throw new Error('Missing mimeType in upload result');
+              }
+              
+              return {
+                id: result.id,
+                url: result.driveUrl || `https://drive.google.com/file/d/${result.driveId}/view`,
+                type: result.mimeType?.startsWith('video') ? 'video' : 'image',
+                alt: result.name,
+                order: value.length,
+                createdAt: result.createdAt,
+                driveId: result.driveId,
+              } as MediaItem;
+            } catch (error) {
+              console.error(`Failed to upload ${file.name}:`, error);
+              throw new Error(`Failed to upload ${file.name}: ${error.message}`);
+            }
+          })
+        );
+
+        // Separate successful uploads from failures
+        const successfulUploads: MediaItem[] = [];
+        const failedUploads: string[] = [];
+        
+        uploadResults.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            successfulUploads.push(result.value);
+          } else {
+            failedUploads.push(acceptedFiles[index].name);
           }
         });
-
-        const newItems = await Promise.all(uploadPromises);
-        onChange([...value, ...newItems]);
+        
+        // Update UI with successful uploads
+        if (successfulUploads.length > 0) {
+          onChange([...value, ...successfulUploads]);
+        }
+        
+        // Report failures
+        if (failedUploads.length > 0) {
+          const errorMessage = `Failed to upload: ${failedUploads.join(', ')}`;
+          console.error('Upload failures:', errorMessage);
+          alert(errorMessage);
+        } else if (successfulUploads.length > 0) {
+          // Only show success message if there were successful uploads and no failures
+          console.log(`Successfully uploaded ${successfulUploads.length} files`);
+        }
       } catch (error) {
         console.error('Upload failed:', error);
         alert('Upload failed. Please try again.');

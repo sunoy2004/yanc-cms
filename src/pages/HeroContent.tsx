@@ -77,8 +77,20 @@ export default function HeroContentPage() {
     try {
       setIsLoading(true);
       const data = await apiService.getHeroContent();
+      
+      // Normalize the data to match HeroContent interface
+      const normalizedData = data ? {
+        ...data,
+        ctaLink: data.ctaLink || data.ctaUrl || '#', // Handle both ctaLink and ctaUrl
+        mediaItems: data.mediaItems || [],
+        isActive: data.isActive ?? true,
+        order: data.order ?? 0,
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString(),
+      } : null;
+      
       // Convert single hero content to array for DataTable
-      setHeroItems(data ? [data] : []);
+      setHeroItems(normalizedData ? [normalizedData] : []);
     } catch (error) {
       console.error('Failed to load hero content:', error);
       toast({
@@ -237,7 +249,14 @@ export default function HeroContentPage() {
     try {
       if (editingItem) {
         // Update existing item
-        const updatedItem = await apiService.updateHeroContent(editingItem.id, formData);
+        const updatedItem = await apiService.updateHeroContent(editingItem.id, {
+          title: formData.title,
+          subtitle: formData.subtitle,
+          ctaText: formData.ctaText,
+          ctaLink: formData.ctaLink,
+          published: formData.isActive,
+          mediaIds: formData.mediaItems?.map(item => item.id) || [],
+        });
         setHeroItems((prev) =>
           prev.map((i) =>
             i.id === editingItem.id
@@ -252,8 +271,12 @@ export default function HeroContentPage() {
       } else {
         // Create new item
         const newItem = await apiService.createHeroContent({
-          ...formData,
-          order: heroItems.length + 1,
+          title: formData.title,
+          subtitle: formData.subtitle,
+          ctaText: formData.ctaText,
+          ctaLink: formData.ctaLink,
+          published: formData.isActive,
+          mediaIds: formData.mediaItems?.map(item => item.id) || [],
         });
         setHeroItems((prev) => [...prev, newItem]);
         toast({
@@ -300,7 +323,6 @@ export default function HeroContentPage() {
         isPublished={(item) => item.isActive}
         searchPlaceholder="Search hero content..."
         emptyMessage="No hero content found. Create your first hero section."
-        isLoading={isLoading}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
