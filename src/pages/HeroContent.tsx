@@ -219,8 +219,7 @@ export default function HeroContentPage() {
   const handleTogglePublish = async (item: HeroContent) => {
     try {
       const updatedItem = await apiService.updateHeroContent(item.id, {
-        ...item,
-        isActive: !item.isActive,
+        published: !item.isActive,
       });
       
       setHeroItems((prev) =>
@@ -326,7 +325,7 @@ export default function HeroContentPage() {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xs sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Edit Hero Content' : 'Create Hero Content'}

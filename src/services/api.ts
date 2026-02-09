@@ -140,9 +140,23 @@ class ApiService {
   }
 
   async updateHeroContent(id: string, data: any): Promise<any> {
+    // Guardrail: Filter out forbidden keys that should not be sent in update requests
+    const allowedKeys = ['title', 'subtitle', 'ctaText', 'ctaLink', 'published', 'mediaIds'];
+    const filteredData: any = {};
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (allowedKeys.includes(key)) {
+        filteredData[key] = value;
+      } else {
+        console.warn(`⚠️ Ignoring forbidden key in update payload: ${key}`);
+      }
+    }
+    
+    console.log('📤 Sending update payload:', filteredData); // Log payload for debugging
+    
     return this.request<any>(`/hero/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(filteredData),
     });
   }
 
