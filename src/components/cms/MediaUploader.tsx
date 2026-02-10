@@ -59,7 +59,7 @@ export function MediaUploader({
               
               return {
                 id: result.id,
-                url: result.driveUrl || `https://drive.google.com/file/d/${result.driveId}/view`,
+                url: result.url, // Use the Supabase Storage URL from backend
                 type: result.mimeType?.startsWith('video') ? 'video' : 'image',
                 alt: result.name,
                 order: value.length,
@@ -120,6 +120,26 @@ export function MediaUploader({
     onChange(value.filter((item) => item.id !== id));
   };
 
+  // Guardrail: Check if URL is valid for rendering
+  const isValidImageUrl = (url: string): boolean => {
+    if (!url) return false;
+    
+    // Check for invalid URL patterns (old Google Drive format)
+    if (url.includes('/file/d/') && url.includes('/view')) {
+      console.warn('⚠️ Invalid Google Drive URL detected:', url);
+      return false;
+    }
+    
+    // Check for valid URL format
+    try {
+      new URL(url);
+      // Accept both Supabase Storage URLs and valid Google Drive URLs
+      return url.includes('supabase.co/storage') || url.startsWith('https://drive.google.com/uc?id=');
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className={cn('space-y-4', className)}>
       {/* Dropzone */}
@@ -164,12 +184,19 @@ export function MediaUploader({
               key={item.id}
               className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
             >
-              {item.type === 'image' ? (
+              {item.type === 'image' && isValidImageUrl(item.url) ? (
                 <img
                   src={item.url}
                   alt={item.alt || ''}
                   className="h-full w-full object-cover"
                 />
+              ) : item.type === 'image' ? (
+                // Invalid URL - show placeholder with warning
+                <div className="flex h-full w-full flex-col items-center justify-center bg-destructive/10 p-2 text-center">
+                  <X className="h-6 w-6 text-destructive" />
+                  <p className="mt-1 text-xs text-destructive">Invalid URL</p>
+                  <p className="text-xs text-muted-foreground">Check console</p>
+                </div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Film className="h-8 w-8 text-muted-foreground" />

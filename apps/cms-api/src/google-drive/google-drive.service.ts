@@ -162,16 +162,19 @@ export class GoogleDriveService {
         corpora: 'drive',
       },
       media,
-      fields: 'id, webViewLink, webContentLink',
+      fields: 'id',
       supportsAllDrives: true,
     });
 
     // Make file publicly accessible in Shared Drive
     await this.makeFilePublic(response.data.id, true);
 
+    const fileId = response.data.id;
+    const publicUrl = `https://drive.google.com/uc?id=${fileId}`;
+
     return {
-      url: response.data.webViewLink || response.data.webContentLink,
-      fileId: response.data.id,
+      url: publicUrl,
+      fileId,
     };
   }
 
@@ -201,15 +204,18 @@ export class GoogleDriveService {
         parents: [targetFolderId],
       },
       media,
-      fields: 'id, webViewLink, webContentLink',
+      fields: 'id',
     });
 
     // Make file publicly accessible
     await this.makeFilePublic(response.data.id);
 
+    const fileId = response.data.id;
+    const publicUrl = `https://drive.google.com/uc?id=${fileId}`;
+
     return {
-      url: response.data.webViewLink || response.data.webContentLink,
-      fileId: response.data.id,
+      url: publicUrl,
+      fileId,
     };
   }
 
@@ -297,6 +303,6 @@ export class GoogleDriveService {
   }
 
   getFileUrl(fileId: string): string {
-    return `https://drive.google.com/file/d/${fileId}/view`;
+    return `https://drive.google.com/uc?id=${fileId}`;
   }
 }

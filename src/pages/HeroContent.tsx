@@ -240,6 +240,13 @@ export default function HeroContentPage() {
       });
     }
   };
+  const normalizeCtaLink = (link: string) => {
+    // Empty CTA link → send null
+    // "#" → send null  
+    // Real URL or relative path → send as-is
+    return !link || link === '#' ? null : link;
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,7 +259,7 @@ export default function HeroContentPage() {
           title: formData.title,
           subtitle: formData.subtitle,
           ctaText: formData.ctaText,
-          ctaLink: formData.ctaLink,
+          ctaLink: normalizeCtaLink(formData.ctaLink),
           published: formData.isActive,
           mediaIds: formData.mediaItems?.map(item => item.id) || [],
         });
@@ -273,7 +280,7 @@ export default function HeroContentPage() {
           title: formData.title,
           subtitle: formData.subtitle,
           ctaText: formData.ctaText,
-          ctaLink: formData.ctaLink,
+          ctaLink: normalizeCtaLink(formData.ctaLink),
           published: formData.isActive,
           mediaIds: formData.mediaItems?.map(item => item.id) || [],
         });

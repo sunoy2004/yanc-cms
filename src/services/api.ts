@@ -12,8 +12,8 @@ interface MediaUploadResponse {
   name: string;
   driveId: string;
   mimeType: string;
-  driveUrl: string;
-  storageType: 'google_drive' | 'local';
+  url: string; // Supabase Storage URL
+  storageType: 'supabase_storage' | 'google_drive';
   createdAt: string;
 }
 

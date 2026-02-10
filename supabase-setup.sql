@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS media (
   drive_id TEXT NOT NULL,
   mime_type TEXT NOT NULL,
   storage_type TEXT DEFAULT 'google_drive',
+  storage_path TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS hero_content (
 CREATE TABLE IF NOT EXISTS hero_media_item (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   hero_id UUID REFERENCES hero_content(id) ON DELETE CASCADE,
+  media_id UUID REFERENCES media(id),
   type TEXT NOT NULL,
   url TEXT NOT NULL,
   alt_text TEXT,

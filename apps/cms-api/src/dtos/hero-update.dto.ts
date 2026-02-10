@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsBoolean, IsArray, IsUrl, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsArray, IsUrl, MaxLength, Matches } from 'class-validator';
 
 export class UpdateHeroDto {
   @IsOptional()
@@ -16,10 +16,13 @@ export class UpdateHeroDto {
   @MaxLength(100)
   ctaText?: string;
 
-  @IsOptional()
-  @IsString()
-  @IsUrl()
-  ctaLink?: string;
+@IsOptional()
+@IsString()
+@Matches(/^\/|^https?:\/\//, {
+  message: 'ctaLink must be a relative path or full URL',
+})
+ctaLink?: string;
+
 
   @IsOptional()
   @IsBoolean()
