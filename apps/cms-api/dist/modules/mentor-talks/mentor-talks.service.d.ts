@@ -1,0 +1,74 @@
+import { SupabaseService } from '../../supabase/supabase.service';
+import { CreateMentorTalkDto } from '../../dtos/mentor-talk.dto';
+import { UpdateMentorTalkDto } from '../../dtos/mentor-talk-update.dto';
+export declare class MentorTalksService {
+    private supabase;
+    private readonly logger;
+    constructor(supabase: SupabaseService);
+    getMentorTalks(): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    getAllMentorTalks(): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    createMentorTalk(dto: CreateMentorTalkDto): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    updateMentorTalk(id: string, dto: UpdateMentorTalkDto): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    deleteMentorTalk(id: string): Promise<boolean>;
+    private updateTalkGallery;
+}

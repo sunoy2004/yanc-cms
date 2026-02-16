@@ -1,0 +1,88 @@
+import { MentorTalksService } from './mentor-talks.service';
+import { CreateMentorTalkDto } from '../../dtos/mentor-talk.dto';
+import { UpdateMentorTalkDto } from '../../dtos/mentor-talk-update.dto';
+export declare class MentorTalksController {
+    private readonly mentorTalksService;
+    constructor(mentorTalksService: MentorTalksService);
+    getPublicMentorTalks(): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    getAllMentorTalks(): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    createMentorTalk(createMentorTalkDto: CreateMentorTalkDto): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    updateMentorTalk(id: string, updateMentorTalkDto: UpdateMentorTalkDto): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+    deleteMentorTalk(id: string): Promise<boolean>;
+    togglePublish(id: string, published: boolean): Promise<{
+        id: any;
+        title: any;
+        speaker: any;
+        speakerBio: any;
+        date: any;
+        description: any;
+        content: any;
+        videoUrl: any;
+        thumbnail: any;
+        gallery: any[];
+        isPublished: any;
+        order: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
+}

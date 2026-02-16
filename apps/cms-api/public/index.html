@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YANC CMS API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            text-align: center;
+            padding: 20px;
+            background: #e8f5e8;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 YANC CMS API</h1>
+        
+        <div class="status">
+            <h2>✅ API Server Running</h2>
+            <p>Status: Healthy and Operational</p>
+        </div>
+
+        <h2>Available Endpoints</h2>
+        
+        <div class="endpoint">
+            <strong>Health Check:</strong>
+            <code>GET /api/health</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>Authentication:</strong>
+            <code>POST /api/auth/login</code><br>
+            <code>POST /api/auth/register</code>
+        </div>
+        
+        <div class="endpoint">
+            <strong>Media Management:</strong>
+            <code>POST /api/media/upload</code><br>
+            <code>GET /api/media</code><br>
+            <code>DELETE /api/media/:id</code>
+        </div>
+
+        <h2>Server Information</h2>
+        <p><strong>Port:</strong> 3001</p>
+        <p><strong>Environment:</strong> Development</p>
+        <p><strong>Framework:</strong> NestJS</p>
+        <p><strong>Database:</strong> Supabase PostgreSQL</p>
+    </div>
+</body>
+</html>
