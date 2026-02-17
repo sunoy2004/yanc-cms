@@ -74,9 +74,11 @@ YANC CMS consists of:
    - `SUPABASE_URL`: Your Supabase URL (e.g., https://your-project.supabase.co)
    - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
    - `SUPABASE_ANON_KEY`: Your Supabase anon key
-   - `JWT_SECRET`: A secure random string for JWT signing
+   - `JWT_SECRET`: A secure random string for JWT signing (REQUIRED - must be at least 32 characters long)
    - `NODE_ENV`: production
    - `PORT`: 8080 (already set by default, but good to specify)
+
+⚠️ **CRITICAL**: The `JWT_SECRET` environment variable is **REQUIRED** for the application to start. Without it, the application will crash with the error: `JwtStrategy requires a secret or key`. Generate a secure random string (e.g., using a password generator) with at least 32 characters.
 
 ⚠️ **Important**: Make sure your Supabase database has all required tables. Run the migration files from your project (like `migrations.sql`, `supabase-setup.sql`, `migrate-hero-media-structure.sql`, etc.) in your Supabase SQL editor.
 
@@ -173,8 +175,9 @@ To set up automatic deployment on GitHub commits:
    - The database connection fails on startup
    - Missing required environment variables
    - Health checks timing out before the application is ready
+   - JWT_SECRET environment variable is missing (causes "JwtStrategy requires a secret or key" error)
    Check the Cloud Run logs in the Google Cloud Console for specific error messages.
-9. **Node Version Compatibility**: The application requires Node.js 18+. While the Dockerfile uses node:18-alpine, ensure that your local development environment and Cloud Build are compatible.
+9. **Node Version Compatibility**: The application requires Node.js 18+. The updated Dockerfile uses node:20-alpine which is recommended for better compatibility. Ensure that your local development environment and Cloud Build are compatible.
 
 ### Accessing Logs:
 
