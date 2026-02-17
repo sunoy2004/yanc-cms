@@ -30,7 +30,7 @@ async function bootstrap() {
     // Shutdown hooks
     app.enableShutdownHooks();
 
-    const port = process.env.PORT || 3001;
+    const port = process.env.PORT || 8080;
     await app.listen(port);
     
     console.log('=====================================');
