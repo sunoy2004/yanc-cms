@@ -168,6 +168,13 @@ To set up automatic deployment on GitHub commits:
 5. **Database Schema**: Ensure your Supabase database has all required tables from the migration files
 6. **Supabase Authentication**: Confirm that your Supabase authentication settings allow the necessary operations
 7. **Build Errors**: If you encounter `sh: nest: not found` errors, ensure your Dockerfile installs dev dependencies during build phase (this is now fixed in the provided Dockerfile)
+8. **Deployment Startup Failures**: If deployment fails during the deploy step with exit code 1, this usually indicates the application crashed on startup. This commonly happens when:
+   - Supabase environment variables are not properly set
+   - The database connection fails on startup
+   - Missing required environment variables
+   - Health checks timing out before the application is ready
+   Check the Cloud Run logs in the Google Cloud Console for specific error messages.
+9. **Node Version Compatibility**: The application requires Node.js 18+. While the Dockerfile uses node:18-alpine, ensure that your local development environment and Cloud Build are compatible.
 
 ### Accessing Logs:
 
