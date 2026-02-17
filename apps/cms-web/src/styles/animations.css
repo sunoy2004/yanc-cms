@@ -1,0 +1,208 @@
+ /* ============================================
+    YANC CMS Animation Utilities
+    CSS-only animations and transitions
+    ============================================ */
+ 
+ /* Fade animations */
+ .animate-fade-in {
+   animation: fadeIn 0.3s ease-out forwards;
+ }
+ 
+ .animate-fade-in-up {
+   animation: fadeInUp 0.4s ease-out forwards;
+ }
+ 
+ .animate-fade-in-down {
+   animation: fadeInDown 0.4s ease-out forwards;
+ }
+ 
+ /* Slide animations */
+ .animate-slide-in-left {
+   animation: slideInLeft 0.3s ease-out forwards;
+ }
+ 
+ .animate-slide-in-right {
+   animation: slideInRight 0.3s ease-out forwards;
+ }
+ 
+ /* Scale animations */
+ .animate-scale-in {
+   animation: scaleIn 0.25s ease-out forwards;
+ }
+ 
+ .animate-pop {
+   animation: pop 0.3s ease-out forwards;
+ }
+ 
+ /* Staggered children animation support */
+ .stagger-children > * {
+   animation: fadeInUp 0.4s ease-out forwards;
+   opacity: 0;
+ }
+ 
+ .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+ .stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+ .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+ .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+ .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+ .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+ .stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+ .stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+ 
+ /* Hover & Interaction Utilities */
+ .hover-lift {
+   transition: all 0.3s ease;
+ }
+ 
+ .hover-lift:hover {
+   transform: translateY(-3px);
+   box-shadow: var(--shadow-lg);
+ }
+ 
+ .hover-glow-accent {
+   transition: all 0.3s ease;
+ }
+ 
+ .hover-glow-accent:hover {
+   box-shadow: var(--shadow-glow-accent);
+ }
+ 
+ .hover-scale {
+   transition: transform 0.2s ease-out;
+ }
+ 
+ .hover-scale:hover {
+   transform: scale(1.03);
+ }
+ 
+ .hover-scale:active {
+   transform: scale(0.98);
+ }
+ 
+ /* Press effect for buttons */
+ .press-effect {
+   transition: transform 0.1s ease;
+ }
+ 
+ .press-effect:active {
+   transform: scale(0.97);
+ }
+ 
+ /* Shimmer effect for loading states */
+ .shimmer {
+   position: relative;
+   overflow: hidden;
+ }
+ 
+ .shimmer::after {
+   content: '';
+   position: absolute;
+   inset: 0;
+   background: linear-gradient(
+     90deg,
+     transparent 0%,
+     hsl(var(--muted-foreground) / 0.05) 50%,
+     transparent 100%
+   );
+   animation: shimmer 2s infinite;
+ }
+ 
+ /* Skeleton Loading Enhancement */
+ .skeleton-wave {
+   position: relative;
+   overflow: hidden;
+   background: hsl(var(--muted));
+ }
+ 
+ .skeleton-wave::after {
+   content: '';
+   position: absolute;
+   inset: 0;
+   background: linear-gradient(
+     90deg,
+     transparent 0%,
+     hsl(var(--foreground) / 0.04) 50%,
+     transparent 100%
+   );
+   animation: shimmer 1.5s ease-in-out infinite;
+ }
+ 
+ /* Keyframe Definitions */
+ @keyframes fadeIn {
+   from { opacity: 0; }
+   to { opacity: 1; }
+ }
+ 
+ @keyframes fadeInUp {
+   from {
+     opacity: 0;
+     transform: translateY(12px);
+   }
+   to {
+     opacity: 1;
+     transform: translateY(0);
+   }
+ }
+ 
+ @keyframes fadeInDown {
+   from {
+     opacity: 0;
+     transform: translateY(-12px);
+   }
+   to {
+     opacity: 1;
+     transform: translateY(0);
+   }
+ }
+ 
+ @keyframes slideInLeft {
+   from {
+     opacity: 0;
+     transform: translateX(-16px);
+   }
+   to {
+     opacity: 1;
+     transform: translateX(0);
+   }
+ }
+ 
+ @keyframes slideInRight {
+   from {
+     opacity: 0;
+     transform: translateX(16px);
+   }
+   to {
+     opacity: 1;
+     transform: translateX(0);
+   }
+ }
+ 
+ @keyframes scaleIn {
+   from {
+     opacity: 0;
+     transform: scale(0.92);
+   }
+   to {
+     opacity: 1;
+     transform: scale(1);
+   }
+ }
+ 
+ @keyframes pop {
+   0% {
+     opacity: 0;
+     transform: scale(0.9);
+   }
+   70% {
+     transform: scale(1.02);
+   }
+   100% {
+     opacity: 1;
+     transform: scale(1);
+   }
+ }
+ 
+ @keyframes shimmer {
+   0% { transform: translateX(-100%); }
+   100% { transform: translateX(100%); }
+ }
