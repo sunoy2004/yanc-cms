@@ -15,6 +15,7 @@ YANC CMS consists of:
 1. **Google Cloud Account** with billing information (required for free tier, but usage stays within free limits)
 2. **Supabase Account** with PostgreSQL database and Storage bucket
 3. **GitHub Repository** containing your YANC CMS code
+4. **Database Schema** - Ensure your Supabase database has all required tables (see your project's SQL migration files)
 
 ## 🚀 Step-by-Step Browser-Based Deployment
 
@@ -42,11 +43,13 @@ YANC CMS consists of:
 ### Step 4: Prepare Supabase Database
 
 1. Create a Supabase project at [supabase.io](https://supabase.io)
-2. Set up your database tables using the SQL schema from your project
+2. Set up your database tables using the SQL migration files in your project (check `migrations/` directory or SQL files in the root like `migrations.sql`, `supabase-setup.sql`, `migrate-hero-media-structure.sql`, etc.)
 3. Note your:
-   - Supabase URL
+   - Supabase URL (e.g., https://your-project.supabase.co)
    - Supabase Anon Key
    - Supabase Service Role Key
+
+⚠️ **Important**: Your project uses direct Supabase queries instead of Prisma, so all database interactions happen through the Supabase client.
 
 ### Step 5: Deploy Backend API
 
@@ -68,12 +71,12 @@ YANC CMS consists of:
    - **Maximum instances**: 1 (to stay in free tier)
 
 4. Click **Next** and set environment variables:
-   - `DATABASE_URL`: Your Supabase PostgreSQL connection string
-   - `SUPABASE_URL`: Your Supabase URL
-   - `SUPABASE_ANON_KEY`: Your Supabase anon key
+   - `SUPABASE_URL`: Your Supabase URL (e.g., https://your-project.supabase.co)
    - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+   - `SUPABASE_ANON_KEY`: Your Supabase anon key
    - `JWT_SECRET`: A secure random string for JWT signing
    - `NODE_ENV`: production
+   - `PORT`: 8080 (already set by default, but good to specify)
 
 5. Click **Deploy**
 
@@ -156,16 +159,28 @@ To set up automatic deployment on GitHub commits:
 
 ### Common Issues:
 
-1. **Connection Timeout**: Ensure your database connection string is correct
+1. **Connection Timeout**: Ensure your Supabase connection details are correct (URL, Service Role Key)
 2. **CORS Errors**: Check that your frontend URL is in the backend's CORS configuration
-3. **Environment Variables**: Verify all required environment variables are set
+3. **Environment Variables**: Verify all required environment variables are set (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY)
 4. **Build Failures**: Check Cloud Build logs for dependency issues
+5. **Database Schema**: Ensure your Supabase database has all required tables from the migration files
+6. **Supabase Authentication**: Confirm that your Supabase authentication settings allow the necessary operations
 
 ### Accessing Logs:
 
 1. In Cloud Run, go to your service
 2. Click on the **Logs** tab to see real-time application logs
 3. Use filters to narrow down specific errors
+
+## ✅ Verification Steps
+
+After deployment, verify everything is working:
+
+1. **Backend Health Check**: Visit `https://your-backend-service-xyz-uc.a.run.app/api/health`
+2. **Database Connection**: Check that the health check returns database connectivity status
+3. **Frontend**: Visit your frontend URL and ensure it loads correctly
+4. **API Integration**: Try accessing public endpoints like `/api/hero`
+5. **Supabase Integration**: Verify that media uploads and database operations work properly
 
 ## 📞 Support
 

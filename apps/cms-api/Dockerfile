@@ -12,8 +12,8 @@ RUN npm ci --only=production
 # Copy the rest of the application
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Build the application (needed for NestJS)
+RUN npm run build
 
 # Expose port
 EXPOSE 8080
@@ -22,4 +22,4 @@ EXPOSE 8080
 ENV PORT=8080
 
 # Start the application
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]
