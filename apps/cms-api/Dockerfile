@@ -1,4 +1,5 @@
-FROM node:18-alpine AS base
+# Multi-stage build for NestJS backend
+FROM node:18-alpine AS builder
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -6,14 +7,31 @@ WORKDIR /usr/src/app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci
 
 # Copy the rest of the application
 COPY . .
 
 # Build the application (needed for NestJS)
 RUN npm run build
+
+# Production stage
+FROM node:18-alpine AS production
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built files from builder stage
+COPY --from=builder /usr/src/app/dist ./dist
+
+
 
 # Expose port
 EXPOSE 8080

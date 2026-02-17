@@ -78,6 +78,8 @@ YANC CMS consists of:
    - `NODE_ENV`: production
    - `PORT`: 8080 (already set by default, but good to specify)
 
+⚠️ **Important**: Make sure your Supabase database has all required tables. Run the migration files from your project (like `migrations.sql`, `supabase-setup.sql`, `migrate-hero-media-structure.sql`, etc.) in your Supabase SQL editor.
+
 5. Click **Deploy**
 
 ### Step 6: Deploy Frontend
@@ -165,6 +167,7 @@ To set up automatic deployment on GitHub commits:
 4. **Build Failures**: Check Cloud Build logs for dependency issues
 5. **Database Schema**: Ensure your Supabase database has all required tables from the migration files
 6. **Supabase Authentication**: Confirm that your Supabase authentication settings allow the necessary operations
+7. **Build Errors**: If you encounter `sh: nest: not found` errors, ensure your Dockerfile installs dev dependencies during build phase (this is now fixed in the provided Dockerfile)
 
 ### Accessing Logs:
 
