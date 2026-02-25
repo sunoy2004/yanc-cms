@@ -18,7 +18,8 @@ function resolveApiBase() {
 export default function AdminProfile() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [profile, setProfile] = useState({ name: "", email: "" });
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -61,9 +62,8 @@ export default function AdminProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
+  const handleSave = async () => {
+    setSavingProfile(true);
     try {
       const res = await fetch(`${apiBase.endsWith("/api") ? apiBase : apiBase + "/api"}/auth/me`, {
         method: "PUT",
@@ -81,17 +81,16 @@ export default function AdminProfile() {
     } catch (err: any) {
       toast({ title: "Error", description: err?.message || "Failed to save profile", variant: "destructive" });
     } finally {
-      setSaving(false);
+      setSavingProfile(false);
     }
   };
 
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({ title: "Error", description: "New password and confirm do not match", variant: "destructive" });
       return;
     }
-    setSaving(true);
+    setSavingPassword(true);
     try {
       const res = await fetch(`${apiBase.endsWith("/api") ? apiBase : apiBase + "/api"}/auth/change-password`, {
         method: "POST",
@@ -113,7 +112,7 @@ export default function AdminProfile() {
     } catch (err: any) {
       toast({ title: "Error", description: err?.message || "Password change failed", variant: "destructive" });
     } finally {
-      setSaving(false);
+      setSavingPassword(false);
     }
   };
 
@@ -129,7 +128,7 @@ export default function AdminProfile() {
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-semibold">Admin Profile</h1>
 
-      <form onSubmit={handleSave} className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <div>
           <Label>Name</Label>
           <Input value={profile.name} onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))} />
@@ -139,13 +138,13 @@ export default function AdminProfile() {
           <Input value={profile.email} onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))} />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Profile"}</Button>
+          <Button type="button" onClick={handleSave} disabled={savingProfile}>{savingProfile ? "Saving..." : "Save Profile"}</Button>
         </div>
       </form>
 
       <hr />
 
-      <form onSubmit={handleChangePassword} className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <h2 className="text-lg font-medium">Change Password</h2>
         <div>
           <Label>Current Password</Label>
@@ -160,7 +159,7 @@ export default function AdminProfile() {
           <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving}>{saving ? "Submitting..." : "Change Password"}</Button>
+          <Button type="button" onClick={handleChangePassword} disabled={savingPassword}>{savingPassword ? "Submitting..." : "Change Password"}</Button>
         </div>
       </form>
     </div>

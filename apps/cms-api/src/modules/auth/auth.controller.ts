@@ -1,10 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Get, Put } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Get, Put, UnauthorizedException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { AuthService, LoginRequest, LoginResponse } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(private authService: AuthService) {}
 
   @Post('login')
@@ -16,9 +17,9 @@ export class AuthController {
     );
     
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
-    
+
     return this.authService.login(user);
   }
   /**
@@ -32,7 +33,12 @@ export class AuthController {
     // req.user is set by JwtStrategy.validate
     const user = req.user as any;
     const userId = Number(user?.userId || user?.sub || 1);
-    return this.authService.getProfile(userId);
+    try {
+      return this.authService.getProfile(userId);
+    } catch (err) {
+      this.logger.error('Error fetching profile', err);
+      throw new InternalServerErrorException('Failed to fetch profile');
+    }
   }
 
   /**
@@ -44,7 +50,12 @@ export class AuthController {
   updateMe(@Req() req: Request, @Body() body: { name?: string; email?: string }) {
     const user = req.user as any;
     const userId = Number(user?.userId || user?.sub || 1);
-    return this.authService.updateProfile(userId, { name: body.name, email: body.email });
+    try {
+      return this.authService.updateProfile(userId, { name: body.name, email: body.email });
+    } catch (err) {
+      this.logger.error('Error updating profile', err);
+      throw new InternalServerErrorException('Failed to update profile');
+    }
   }
 
   /**
@@ -57,6 +68,18 @@ export class AuthController {
   async changePassword(@Req() req: Request, @Body() body: { currentPassword: string; newPassword: string }) {
     const user = req.user as any;
     const userId = Number(user?.userId || user?.sub || 1);
-    return this.authService.changePassword(userId, body.currentPassword, body.newPassword);
+    if (!body?.currentPassword || !body?.newPassword) {
+      throw new BadRequestException('currentPassword and newPassword are required');
+    }
+
+    try {
+      return await this.authService.changePassword(userId, body.currentPassword, body.newPassword);
+    } catch (err: any) {
+      this.logger.error('Error changing password', err?.message || err);
+      if (err.message && err.message.includes('Current password is incorrect')) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+      throw new InternalServerErrorException(err?.message || 'Failed to change password');
+    }
   }
 }
