@@ -68,6 +68,7 @@ async function bootstrap() {
     const allowedOrigins = [
       'https://website-1095720168864.asia-south1.run.app',
       'https://ynac-cms-bk-1095720168864.asia-south1.run.app',
+      'https://yanc-cms-1095720168864.asia-south1.run.app',
       'http://localhost:3000',
       'http://localhost:5173',
       'http://127.0.0.1:5173',
