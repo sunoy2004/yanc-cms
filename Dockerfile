@@ -19,16 +19,19 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
+# Install envsubst for runtime env var substitution and other small tools
+RUN apk add --no-cache gettext
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx configuration template (will substitute $PORT at container start)
+COPY nginx.conf /etc/nginx/nginx.conf.template
 
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port
+# Default port (can be overridden by Cloud Run via PORT env)
+ENV PORT=8080
 EXPOSE 8080
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Substitute PORT into nginx.conf at container start and run nginx
+CMD [ "sh", "-c", "envsubst '$$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'" ]
 
