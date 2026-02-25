@@ -104,13 +104,7 @@
              <p className="mt-3 text-muted-foreground">
                Enter your credentials to access the admin dashboard.
              </p>
-             <div className="mt-4 bg-accent/5 border border-accent/10 rounded-xl p-4">
-               <p className="text-sm text-muted-foreground">
-                 <span className="font-medium">Demo Credentials:</span><br/>
-                 Username: <span className="font-mono">admin</span><br/>
-                 Password: <span className="font-mono">yanc-cms-admin</span>
-               </p>
-             </div>
+            {/* Demo credentials removed */}
            </div>
  
            <form onSubmit={handleSubmit} className="space-y-7">
