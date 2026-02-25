@@ -23,7 +23,7 @@ YANC CMS consists of:
 
 1. Push your complete YANC CMS code to a GitHub repository
 2. Make sure your repository contains:
-   - Dockerfiles for both backend (`apps/cms-api/Dockerfile`) and frontend (`apps/cms-web/Dockerfile`)
+   - Dockerfiles for both backend (`apps/cms-api/Dockerfile`) and frontend (`Dockerfile` at repository root)
    - Complete codebase with all dependencies
 
 ### Step 2: Set Up Google Cloud Project
@@ -92,7 +92,7 @@ YANC CMS consists of:
    - **Source**: Deploy from source repository
    - **Repository**: Connect to your GitHub repository
    - **Repository**: Select your YANC CMS repository
-   - **Directory**: `apps/cms-web`
+   - **Directory**: `.` (repository root — Cloud Run will use the root `Dockerfile` to build and serve the frontend)
    - **Language**: Other (since it's a static site served by nginx)
    - **Containerize your application**: Check this box
    - **Region**: Same as backend (recommended)
