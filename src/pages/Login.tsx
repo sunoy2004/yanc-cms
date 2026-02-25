@@ -162,14 +162,7 @@
              </Button>
            </form>
  
-           <div className="mt-10 rounded-xl border border-border/60 bg-muted/30 p-5">
-             <p className="text-sm font-semibold text-foreground">Demo Credentials</p>
-             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-               Email: admin@yanc.in
-               <br />
-               Password: admin123
-             </p>
-           </div>
+          {/* Demo credentials removed in production UI */}
          </div>
        </div>
      </div>

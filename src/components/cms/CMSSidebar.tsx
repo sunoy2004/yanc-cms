@@ -38,6 +38,7 @@
  
  const navItems: NavItem[] = [
    { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { title: 'Profile', href: '/profile', icon: UserCog },
    { title: 'Hero Content', href: '/hero', icon: Sparkles },
    {
      title: 'Events',

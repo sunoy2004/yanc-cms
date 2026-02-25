@@ -1,4 +1,4 @@
- import { Bell, Search, LogOut, User } from 'lucide-react';
+import { Bell, Search, LogOut, User } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
  import {
@@ -9,6 +9,7 @@
    DropdownMenuSeparator,
    DropdownMenuTrigger,
  } from '@/components/ui/dropdown-menu';
+import { NavLink } from 'react-router-dom';
  import { Avatar, AvatarFallback } from '@/components/ui/avatar';
  import { useAuth } from '@/contexts/AuthContext';
  import { cn } from '@/lib/utils';
@@ -74,10 +75,12 @@
            <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg border-border/60">
              <DropdownMenuLabel>My Account</DropdownMenuLabel>
              <DropdownMenuSeparator />
-             <DropdownMenuItem className="rounded-lg cursor-pointer">
-               <User className="mr-2 h-4 w-4" />
-               Profile
-             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <NavLink to="/profile" className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </NavLink>
+            </DropdownMenuItem>
              <DropdownMenuSeparator />
              <DropdownMenuItem onClick={logout} className="text-destructive rounded-lg cursor-pointer focus:text-destructive">
                <LogOut className="mr-2 h-4 w-4" />

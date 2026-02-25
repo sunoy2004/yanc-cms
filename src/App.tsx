@@ -22,6 +22,7 @@ import ContentSection from "./pages/ContentSection";
 import AboutUsManagement from "./pages/AboutUsManagement";
 import MediaLibrary from "./pages/MediaLibrary";
 import Settings from "./pages/Settings";
+import AdminProfile from "./pages/AdminProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
               {/* Media & Settings */}
               <Route path="/media" element={<MediaLibrary />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<AdminProfile />} />
             </Route>
             
             {/* Redirects */}

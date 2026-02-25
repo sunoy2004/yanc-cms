@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { User, AuthState } from '@/types/cms';
 
@@ -45,36 +46,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (username: string, password: string) => {
     setState(prev => ({ ...prev, isLoading: true }));
-    
+
+    // Resolve API base prioritizing production/live vars, then fallbacks
+    const resolveApiBase = () => {
+      const viteApi = (import.meta.env.VITE_API_URL as string) || '';
+      const cmsApi = (import.meta.env.VITE_CMS_API_URL as string) || '';
+      const cmsBase = (import.meta.env.VITE_CMS_BASE_URL as string) || '';
+
+      if (viteApi && viteApi.trim() !== '') return viteApi.replace(/\/+$/, '');
+      if (cmsApi && cmsApi.trim() !== '') return cmsApi.replace(/\/+$/, '');
+      if (cmsBase && cmsBase.trim() !== '') return cmsBase.replace(/\/+$/, '');
+      return 'http://localhost:8080';
+    };
+
     try {
-      // Use actual API call to backend
-      const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/auth/login`, {
+      const apiBase = resolveApiBase();
+      // Ensure we call the correct auth endpoint whether apiBase includes /api or not
+      const authUrl = apiBase.endsWith('/api') ? `${apiBase}/auth/login` : `${apiBase}/api/auth/login`;
+
+      const response = await fetch(authUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: username,  // Backend expects username
-          password: password 
+        body: JSON.stringify({
+          username: username, // Backend expects username
+          password: password,
         }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Invalid credentials');
+        // Attempt to surface backend error message if available
+        let msg = 'Invalid credentials';
+        try {
+          const err = await response.json();
+          msg = err?.message || msg;
+        } catch {
+          /* ignore parse errors */
+        }
+        throw new Error(msg);
       }
-      
+
       const data = await response.json();
-      
-      // The backend returns accessToken, frontend expects token
+
+      // The backend returns accessToken
       const token = data.accessToken;
       const user: User = {
         id: '1',
-        email: `${username}@yanc.in`,  // Create email from username for frontend
+        email: `${username}@yanc.in`,
         name: 'Admin User',
         role: 'admin',
       };
-      
+
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-      
+
       setState({
         user,
         token,
