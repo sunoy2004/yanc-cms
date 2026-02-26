@@ -22,7 +22,7 @@ export default function AdminProfile() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [profile, setProfile] = useState({ name: "", email: "", username: "" });
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,6 +47,7 @@ export default function AdminProfile() {
         setProfile({
           name: data.name || data.username || "",
           email: data.email || "",
+          username: data.username || "",
         });
       } catch (err: any) {
         console.warn("Could not fetch profile:", err?.message || err);
@@ -184,7 +185,7 @@ export default function AdminProfile() {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({ name: profile.name, email: profile.email }),
+        body: JSON.stringify({ name: profile.name, email: profile.email, username: profile.username }),
       });
       if (!res.ok) {
         const err = await res.text().catch(() => "");
@@ -253,6 +254,13 @@ export default function AdminProfile() {
         <div>
           <Label>Name</Label>
           <Input value={profile.name} onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))} />
+        </div>
+        <div>
+          <Label>Username</Label>
+          <Input
+            value={profile.username}
+            onChange={(e) => setProfile(prev => ({ ...prev, username: e.target.value }))}
+          />
         </div>
         <div>
           <Label>Email</Label>

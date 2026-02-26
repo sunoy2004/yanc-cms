@@ -1,18 +1,19 @@
- import { useState } from 'react';
+import { useState } from 'react';
  import { Navigate, Link } from 'react-router-dom';
  import { useAuth } from '@/contexts/AuthContext';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
- import { Label } from '@/components/ui/label';
- import { Loader2, Lock, Mail } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Loader2, Lock, Mail, Eye, EyeOff } from 'lucide-react';
  import { useToast } from '@/hooks/use-toast';
  
  export default function Login() {
    const { login, isAuthenticated, isLoading: authLoading } = useAuth();
-   const { toast } = useToast();
-   const [username, setUsername] = useState('');
-   const [password, setPassword] = useState('');
-   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
  
    if (authLoading) {
      return (
@@ -95,66 +96,82 @@
        {/* Right side - Login Form */}
        <div className="flex w-full items-center justify-center p-8 lg:w-1/2 bg-background">
          <div className="w-full max-w-md animate-fade-in">
-           <div className="mb-10 lg:hidden">
-             <div className="flex items-center gap-3">
-               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary shadow-md">
-                 <span className="text-lg font-bold text-primary-foreground">Y</span>
-               </div>
-               <span className="text-xl font-semibold tracking-tight">YANC CMS</span>
-             </div>
-           </div>
+          <div className="mb-10 lg:hidden">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-md overflow-hidden">
+                <img
+                  src="/favicon.svg"
+                  alt="YANC logo"
+                  className="h-9 w-9"
+                />
+              </div>
+              <span className="text-xl font-semibold tracking-tight">YANC CMS</span>
+            </div>
+          </div>
  
            <div className="mb-10">
              <h2 className="text-3xl font-bold text-foreground tracking-tight">Welcome back</h2>
              <p className="mt-3 text-muted-foreground">
-               Enter your credentials to access the admin dashboard.
+               Enter your credentials to login.
              </p>
             {/* Demo credentials removed */}
            </div>
  
-           <form onSubmit={handleSubmit} className="space-y-7">
-             <div className="space-y-2.5">
-               <Label htmlFor="email">Username</Label>
-               <div className="relative">
-                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                 <Input
-                   id="email"
-                   type="text"
-                   placeholder="Username"
-                   value={username}
-                   onChange={(e) => setUsername(e.target.value)}
-                   className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
-                   required
-                 />
-               </div>
-             </div>
- 
-<div className="space-y-2.5">
-               <div className="flex items-center justify-between">
-                 <Label htmlFor="password">Password</Label>
-                 <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">
-                   Forgot password?
-                 </Link>
-               </div>
-               <div className="relative">
-                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                 <Input
-                   id="password"
-                   type="password"
-                   placeholder="••••••••"
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                   className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
-                   required
-                 />
-               </div>
-             </div>
+          <form onSubmit={handleSubmit} className="space-y-7">
+            <div className="space-y-2.5">
+              <Label htmlFor="email">Username or email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="text"
+                  placeholder="admin or user@example.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
+                  required
+                />
+              </div>
+            </div>
 
-             <Button
-               type="submit" 
-               className="w-full h-11 rounded-xl font-medium text-base shadow-sm hover:shadow-md transition-all active:scale-[0.98]" 
-               disabled={isLoading}
-             >
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-11 pr-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit" 
+              className="w-full h-11 rounded-xl font-medium text-base shadow-sm hover:shadow-md transition-all active:scale-[0.98] bg-neutral-900 hover:bg-neutral-800 text-white" 
+              disabled={isLoading}
+            >
                {isLoading ? (
                  <>
                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />

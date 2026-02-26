@@ -22,17 +22,32 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(private jwtService: JwtService, private supabaseService: SupabaseService) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(usernameOrEmail: string, password: string): Promise<any> {
     // Prefer Supabase-backed users if available
     const client = this.supabaseService.getClient();
-    if (client) {
+    const identifier = (usernameOrEmail || '').trim();
+    if (client && identifier) {
       try {
-        const { data, error } = await client
+        // First try by username
+        let { data, error } = await client
           .from('users')
-          .select('id, username, password_hash, role')
-          .eq('username', username)
+          .select('id, username, password_hash, role, email')
+          .eq('username', identifier)
           .limit(1)
           .maybeSingle();
+
+        if (!data) {
+          // If no username match, try by email (normalized to lowercase)
+          const emailIdentifier = identifier.toLowerCase();
+          const result = await client
+            .from('users')
+            .select('id, username, password_hash, role, email')
+            .eq('email', emailIdentifier)
+            .limit(1)
+            .maybeSingle();
+          data = result.data;
+          error = result.error;
+        }
 
         if (error) {
           this.logger.error('Supabase error fetching user:', error);
@@ -58,8 +73,10 @@ export class AuthService {
     const validUsername = 'admin';
     const validPassword = 'yanc-cms-admin';
 
-    if (username === validUsername && password === validPassword) {
+    if (identifier === validUsername || identifier === 'admin@yanc.in') {
+      if (password === validPassword) {
       return { userId: 1, username: validUsername, role: 'admin' };
+      }
     }
     return null;
   }
@@ -97,10 +114,35 @@ export class AuthService {
     };
   }
 
-  async updateProfile(userId: number, data: { name?: string; email?: string }) {
+  async updateProfile(userId: number, data: { name?: string; email?: string; username?: string }) {
     const client = this.supabaseService.getClient();
     if (client) {
-      const { error } = await client.from('users').update({ name: data.name, email: data.email }).eq('id', userId);
+      const updatePayload: Record<string, any> = {};
+      if (typeof data.name === 'string') {
+        updatePayload.name = data.name;
+      }
+      if (typeof data.email === 'string') {
+        updatePayload.email = data.email;
+      }
+      if (typeof data.username === 'string' && data.username.trim() !== '') {
+        const newUsername = data.username.trim();
+        // Ensure username is unique (or belongs to this user)
+        const { data: existing, error: usernameErr } = await client
+          .from('users')
+          .select('id')
+          .eq('username', newUsername)
+          .maybeSingle();
+        if (usernameErr) {
+          this.logger.error('Supabase updateProfile username check error:', usernameErr);
+          throw new Error('Failed to update profile');
+        }
+        if (existing && (existing as any).id !== userId) {
+          throw new Error('Username is already taken');
+        }
+        updatePayload.username = newUsername;
+      }
+
+      const { error } = await client.from('users').update(updatePayload).eq('id', userId);
       if (error) {
         this.logger.error('Supabase updateProfile error:', error);
         throw new Error('Failed to update profile');
@@ -108,7 +150,7 @@ export class AuthService {
       return this.getProfile(userId);
     }
     // Fallback: return updated fake profile
-    return { id: userId, username: 'admin', name: data.name, email: data.email, role: 'admin' };
+    return { id: userId, username: data.username || 'admin', name: data.name, email: data.email, role: 'admin' };
   }
 
   async changePassword(userId: number, currentPassword: string, newPassword: string) {

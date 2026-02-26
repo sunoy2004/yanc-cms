@@ -58,16 +58,16 @@ export class AuthController {
   }
 
   /**
-   * Update current user's profile (name/email)
+   * Update current user's profile (name/email/username)
    */
   @UseGuards(JwtAuthGuard)
   @Put('me')
   @HttpCode(HttpStatus.OK)
-  updateMe(@Req() req: Request, @Body() body: { name?: string; email?: string }) {
+  updateMe(@Req() req: Request, @Body() body: { name?: string; email?: string; username?: string }) {
     const user = req.user as any;
     const userId = Number(user?.userId || user?.sub || 1);
     try {
-      return this.authService.updateProfile(userId, { name: body.name, email: body.email });
+      return this.authService.updateProfile(userId, { name: body.name, email: body.email, username: body.username });
     } catch (err) {
       this.logger.error('Error updating profile', err);
       throw new InternalServerErrorException('Failed to update profile');
