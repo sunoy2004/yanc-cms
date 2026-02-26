@@ -1,4 +1,19 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Get, Put, UnauthorizedException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Req,
+  Get,
+  Put,
+  UnauthorizedException,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AuthService, LoginRequest, LoginResponse } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
@@ -81,6 +96,100 @@ export class AuthController {
         throw new UnauthorizedException('Current password is incorrect');
       }
       throw new InternalServerErrorException(err?.message || 'Failed to change password');
+    }
+  }
+
+  /**
+   * Admin-only: create a new CMS user with an auto-generated initial password.
+   * Body: { email, name?, username? }
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('users')
+  @HttpCode(HttpStatus.CREATED)
+  async createUser(
+    @Req() req: Request,
+    @Body()
+    body: {
+      email?: string;
+      name?: string;
+      username?: string;
+    },
+  ) {
+    const current = req.user as any;
+    const userId = Number(current?.userId || current?.sub || 1);
+    const email = typeof body?.email === 'string' ? body.email.trim() : '';
+    if (!email) {
+      throw new BadRequestException('email is required');
+    }
+    try {
+      const created = await this.authService.createCmsUser(userId, {
+        email,
+        name: body?.name,
+        username: body?.username,
+      });
+      return created;
+    } catch (err: any) {
+      this.logger.error('Error creating CMS user', err?.message || err);
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
+      if (typeof err?.message === 'string' && err.message.includes('already exists')) {
+        throw new BadRequestException(err.message);
+      }
+      throw new InternalServerErrorException(err?.message || 'Failed to create user');
+    }
+  }
+
+  /**
+   * Admin-only: list CMS users created by the current admin.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  @HttpCode(HttpStatus.OK)
+  async listUsers(@Req() req: Request) {
+    const current = req.user as any;
+    const userId = Number(current?.userId || current?.sub || 1);
+    try {
+      return await this.authService.listCmsUsers(userId);
+    } catch (err: any) {
+      this.logger.error('Error listing CMS users', err?.message || err);
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
+      throw new InternalServerErrorException(err?.message || 'Failed to load users');
+    }
+  }
+
+  /**
+   * Admin-only: delete a CMS user created by the current admin.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('users/delete')
+  @HttpCode(HttpStatus.OK)
+  async deleteUser(
+    @Req() req: Request,
+    @Body()
+    body: {
+      userId?: number;
+    },
+  ) {
+    const current = req.user as any;
+    const currentUserId = Number(current?.userId || current?.sub || 1);
+    const userIdToDelete = Number(body?.userId || 0);
+    if (!userIdToDelete || Number.isNaN(userIdToDelete)) {
+      throw new BadRequestException('userId is required');
+    }
+    try {
+      return await this.authService.deleteCmsUser(currentUserId, userIdToDelete);
+    } catch (err: any) {
+      this.logger.error('Error deleting CMS user', err?.message || err);
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
+      if (typeof err?.message === 'string' && (err.message.includes('not found') || err.message.includes('Cannot delete'))) {
+        throw new BadRequestException(err.message);
+      }
+      throw new InternalServerErrorException(err?.message || 'Failed to delete user');
     }
   }
 

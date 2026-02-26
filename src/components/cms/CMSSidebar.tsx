@@ -1,6 +1,7 @@
- import { useState } from 'react';
- import { NavLink, useLocation } from 'react-router-dom';
- import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
  import {
    LayoutDashboard,
    Calendar,
@@ -80,7 +81,8 @@
  }
  
  export function CMSSidebar({ isCollapsed = false, onToggle }: CMSSidebarProps) {
-   const location = useLocation();
+  const location = useLocation();
+  const { user } = useAuth();
    const [openSections, setOpenSections] = useState<string[]>(['Events', 'Team Management', 'Content Sections']);
  
    const toggleSection = (title: string) => {
@@ -89,9 +91,18 @@
      );
    };
  
-   const isActive = (href: string) => location.pathname === href;
-   const isSectionActive = (children?: NavItem[]) =>
-     children?.some(child => child.href && location.pathname === child.href);
+  const isActive = (href: string) => location.pathname === href;
+  const isSectionActive = (children?: NavItem[]) =>
+    children?.some(child => child.href && location.pathname === child.href);
+
+  const isAdmin = user?.role === 'admin';
+  const filteredNavItems = navItems.filter((item) => {
+    if (!isAdmin) {
+      // Hide admin-only entries for non-admins
+      if (item.title === 'Settings') return false;
+    }
+    return true;
+  });
  
    return (
      <aside
@@ -127,8 +138,8 @@
  
        {/* Navigation */}
        <nav className="flex-1 overflow-y-auto p-3 pb-6 sidebar-constrained scrollbar-thin touch-pan-y">
-         <ul className="space-y-1.5">
-           {navItems.map((item) => (
+          <ul className="space-y-1.5">
+          {filteredNavItems.map((item) => (
              <li key={item.title}>
                {item.children ? (
                  <Collapsible

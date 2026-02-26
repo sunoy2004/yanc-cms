@@ -49,23 +49,27 @@
  
    return (
      <div className="flex min-h-screen">
-       {/* Left side - Branding */}
-       <div className="hidden w-1/2 bg-gradient-to-br from-primary via-primary to-primary/90 lg:flex lg:flex-col lg:justify-between lg:p-12 relative overflow-hidden">
+      {/* Left side - Branding */}
+      <div className="hidden w-1/2 bg-black lg:flex lg:flex-col lg:justify-between lg:p-12 relative overflow-hidden">
          {/* Decorative elements */}
          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
          <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
          
-         <div className="flex items-center gap-3 relative z-10">
-           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent shadow-lg">
-             <span className="text-lg font-bold text-accent-foreground">Y</span>
-           </div>
-           <span className="text-xl font-semibold text-primary-foreground tracking-tight">YANC CMS</span>
-         </div>
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-black shadow-lg overflow-hidden">
+            <img
+              src="/favicon.svg"
+              alt="YANC logo"
+              className="h-10 w-10"
+            />
+          </div>
+          <span className="text-xl font-semibold text-primary-foreground tracking-tight">YANC CMS</span>
+        </div>
          <div className="relative z-10">
            <h1 className="text-4xl font-bold text-primary-foreground leading-tight">
              Content Management
              <br />
-             Made Simple
+             System
            </h1>
            <p className="mt-6 text-lg text-primary-foreground/80 leading-relaxed max-w-md">
              Manage your website content with an intuitive, powerful dashboard.
@@ -82,9 +86,10 @@
              </div>
            </div>
          </div>
-         <p className="text-sm text-primary-foreground/60 relative z-10">
-           © {new Date().getFullYear()} YANC. All rights reserved.
-         </p>
+        <div className="text-sm text-primary-foreground/60 relative z-10 space-y-0.5">
+          <p>© {new Date().getFullYear()} YANC. All rights reserved.</p>
+          <p className="text-xs text-primary-foreground/50">v2026.02.26</p>
+        </div>
        </div>
  
        {/* Right side - Login Form */}
@@ -115,7 +120,7 @@
                  <Input
                    id="email"
                    type="text"
-                   placeholder="admin"
+                   placeholder="Username"
                    value={username}
                    onChange={(e) => setUsername(e.target.value)}
                    className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"

@@ -23,9 +23,19 @@ import AboutUsManagement from "./pages/AboutUsManagement";
 import MediaLibrary from "./pages/MediaLibrary";
 import Settings from "./pages/Settings";
 import AdminProfile from "./pages/AdminProfile";
+import UserProfile from "./pages/UserProfile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import { useAuth } from "./contexts/AuthContext";
+
+const ProfileRoute = () => {
+  const { user } = useAuth();
+  if (!user || user.role === "admin") {
+    return <AdminProfile />;
+  }
+  return <UserProfile />;
+};
 
 const queryClient = new QueryClient();
 
@@ -72,7 +82,7 @@ const App = () => (
               {/* Media & Settings */}
               <Route path="/media" element={<MediaLibrary />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/profile" element={<AdminProfile />} />
+              <Route path="/profile" element={<ProfileRoute />} />
             </Route>
             
             {/* Redirects */}

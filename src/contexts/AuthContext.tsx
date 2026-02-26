@@ -40,7 +40,7 @@ async function fetchProfile(token: string): Promise<User | null> {
       id: String(data.id ?? '1'),
       email: data.email || `${data.username || 'admin'}@yanc.in`,
       name: data.name || data.username || 'Admin User',
-      role: 'admin',
+      role: (data.role === 'editor' ? 'editor' : 'admin'),
     };
     return user;
   } catch {
