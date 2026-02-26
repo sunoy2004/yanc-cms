@@ -33,7 +33,7 @@ export class ActivityService {
           .order('updated_at', { ascending: false })
           .limit(limit),
         client
-          .from('hero')
+          .from('hero_content')
           .select('id,title,created_at,updated_at,is_active')
           .order('updated_at', { ascending: false })
           .limit(limit),
