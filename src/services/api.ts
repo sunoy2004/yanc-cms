@@ -1,5 +1,11 @@
 // Production API Service for YANC CMS
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'; // Use environment variable or fallback
+import { getApiBase } from '@/lib/api';
+
+// Ensure we always talk to the same backend base used elsewhere (AuthContext, stats, etc.)
+const API_BASE_URL = (() => {
+  const base = getApiBase();
+  return base.endsWith('/api') ? base : `${base}/api`;
+})();
 
 interface ApiError {
   message: string;
@@ -33,9 +39,11 @@ class ApiService {
     const url = `${API_BASE_URL}${endpoint}`;
     
     // Get token and build headers safely
-    const token = localStorage.getItem('access_token');
-    
-    console.log('Sending request with token:', token ? 'VALID TOKEN' : 'NO TOKEN');
+    // Primary token used by AuthContext
+    const primaryToken = localStorage.getItem('yanc_cms_token');
+    // Fallback to any legacy token key if present
+    const legacyToken = localStorage.getItem('access_token');
+    const token = primaryToken || legacyToken || '';
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -206,6 +214,36 @@ class ApiService {
   async toggleMentorTalkPublish(id: string, published: boolean): Promise<any> {
     return this.request<any>(`/mentor-talks/${id}/publish`, {
       method: 'PUT',
+      body: JSON.stringify({ published }),
+    });
+  }
+
+  // Programs API
+  async getPrograms(): Promise<any[]> {
+    return this.request<any[]>('/programs');
+  }
+
+  async createProgram(data: any): Promise<any[]> {
+    return this.request<any[]>('/programs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateProgram(id: string, data: any): Promise<any[]> {
+    return this.request<any[]>(`/programs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProgram(id: string): Promise<void> {
+    await this.request(`/programs/${id}`, { method: 'DELETE' });
+  }
+
+  async toggleProgramPublish(id: string, published: boolean): Promise<any[]> {
+    return this.request<any[]>(`/programs/${id}/publish`, {
+      method: 'PATCH',
       body: JSON.stringify({ published }),
     });
   }

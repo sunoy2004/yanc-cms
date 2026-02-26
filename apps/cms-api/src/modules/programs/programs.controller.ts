@@ -8,6 +8,12 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class ProgramsController {
   constructor(private readonly programsService: ProgramsService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAdminPrograms() {
+    return this.programsService.getPrograms();
+  }
+
   @Get('public')
   async getPublicPrograms() {
     return this.programsService.getPrograms();

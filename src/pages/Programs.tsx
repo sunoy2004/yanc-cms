@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/cms/PageHeader';
 import { DataTable, Column } from '@/components/cms/DataTable';
 import { MediaUploader } from '@/components/cms/MediaUploader';
@@ -18,50 +18,12 @@ import { Plus, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Program, MediaItem } from '@/types/cms';
 import { cn } from '@/lib/utils';
-
-// Mock data
-const mockPrograms: Program[] = [
-  {
-    id: '1',
-    title: 'Startup Accelerator',
-    description: 'A 12-week intensive program for early-stage startups.',
-    content: 'Full program content goes here...',
-    image: '/placeholder.svg',
-    gallery: [],
-    isPublished: true,
-    order: 1,
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-03-20T15:30:00Z',
-  },
-  {
-    id: '2',
-    title: 'Leadership Workshop Series',
-    description: 'Develop essential leadership skills through hands-on workshops.',
-    content: 'Workshop series content...',
-    image: '/placeholder.svg',
-    gallery: [],
-    isPublished: true,
-    order: 2,
-    createdAt: '2024-02-01T09:00:00Z',
-    updatedAt: '2024-02-20T12:00:00Z',
-  },
-  {
-    id: '3',
-    title: 'Mentorship Program',
-    description: 'Connect with experienced mentors in your industry.',
-    content: 'Mentorship program details...',
-    image: '/placeholder.svg',
-    gallery: [],
-    isPublished: false,
-    order: 3,
-    createdAt: '2024-03-15T11:00:00Z',
-    updatedAt: '2024-03-15T11:00:00Z',
-  },
-];
+import { apiService } from '@/services/api';
 
 export default function ProgramsPage() {
   const { toast } = useToast();
-  const [programs, setPrograms] = useState<Program[]>(mockPrograms);
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Program | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +36,55 @@ export default function ProgramsPage() {
     gallery: [] as MediaItem[],
     isPublished: true,
   });
+
+  const normalizePrograms = (apiPrograms: any[]): Program[] => {
+    return (apiPrograms || []).map((p: any) => {
+      const mediaItems = p.mediaItems || [];
+      const firstImage = mediaItems[0]?.url || '/placeholder.svg';
+      const gallery: MediaItem[] = mediaItems.map((m: any) => ({
+        id: String(m.id),
+        url: m.url,
+        type: m.type,
+        alt: m.alt,
+        order: m.order,
+        createdAt: m.createdAt,
+      }));
+      return {
+        id: String(p.id),
+        title: p.title,
+        description: p.description || '',
+        content: '', // backend does not yet store full content
+        image: firstImage,
+        gallery,
+        isPublished: p.is_active ?? true,
+        order: p.order ?? 0,
+        createdAt: p.created_at || new Date().toISOString(),
+        updatedAt: p.updated_at || new Date().toISOString(),
+      };
+    });
+  };
+
+  const loadPrograms = async () => {
+    try {
+      setIsDataLoading(true);
+      const apiPrograms = await apiService.getPrograms();
+      setPrograms(normalizePrograms(apiPrograms));
+    } catch (error) {
+      console.error('Error loading programs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load programs. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPrograms();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const columns: Column<Program>[] = [
     {
@@ -146,26 +157,40 @@ export default function ProgramsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (item: Program) => {
+  const handleDelete = async (item: Program) => {
     if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
-      setPrograms((prev) => prev.filter((i) => i.id !== item.id));
-      toast({
-        title: 'Program deleted',
-        description: 'The program has been removed.',
-      });
+      try {
+        await apiService.deleteProgram(item.id);
+        setPrograms((prev) => prev.filter((i) => i.id !== item.id));
+        toast({
+          title: 'Program deleted',
+          description: 'The program has been removed.',
+        });
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to delete program.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
-  const handleTogglePublish = (item: Program) => {
-    setPrograms((prev) =>
-      prev.map((i) =>
-        i.id === item.id ? { ...i, isPublished: !i.isPublished } : i
-      )
-    );
-    toast({
-      title: item.isPublished ? 'Program unpublished' : 'Program published',
-      description: `"${item.title}" is now ${item.isPublished ? 'hidden' : 'visible'}.`,
-    });
+  const handleTogglePublish = async (item: Program) => {
+    try {
+      const updated = await apiService.toggleProgramPublish(item.id, !item.isPublished);
+      setPrograms(normalizePrograms(updated));
+      toast({
+        title: item.isPublished ? 'Program unpublished' : 'Program published',
+        description: `"${item.title}" is now ${item.isPublished ? 'hidden' : 'visible'}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update publish status.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,29 +198,25 @@ export default function ProgramsPage() {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const mediaIds = formData.gallery.map((item) => item.id);
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        published: formData.isPublished,
+        order: editingItem ? editingItem.order : programs.length + 1,
+        mediaIds,
+      };
 
       if (editingItem) {
-        setPrograms((prev) =>
-          prev.map((i) =>
-            i.id === editingItem.id
-              ? { ...i, ...formData, updatedAt: new Date().toISOString() }
-              : i
-          )
-        );
+        const updated = await apiService.updateProgram(editingItem.id, payload);
+        setPrograms(normalizePrograms(updated));
         toast({
           title: 'Program updated',
           description: 'Your changes have been saved.',
         });
       } else {
-        const newItem: Program = {
-          id: `temp-${Date.now()}`,
-          ...formData,
-          order: programs.length + 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setPrograms((prev) => [...prev, newItem]);
+        const updated = await apiService.createProgram(payload);
+        setPrograms(normalizePrograms(updated));
         toast({
           title: 'Program created',
           description: 'New program has been added.',
@@ -239,7 +260,7 @@ export default function ProgramsPage() {
         onTogglePublish={handleTogglePublish}
         isPublished={(item) => item.isPublished}
         searchPlaceholder="Search programs..."
-        emptyMessage="No programs found. Create your first program."
+        emptyMessage={isDataLoading ? 'Loading programs...' : 'No programs found. Create your first program.'}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

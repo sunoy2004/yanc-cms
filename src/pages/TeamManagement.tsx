@@ -267,11 +267,13 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
   const handleDelete = async (item: TeamMember) => {
     if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/team/${item.id}`, {
+        const base = import.meta.env.VITE_CMS_BASE_URL || '';
+        const token = localStorage.getItem('yanc_cms_token') || '';
+        const response = await fetch(`${base}/api/team/${item.id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}` // Assuming JWT auth
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
 
@@ -279,9 +281,8 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
           throw new Error(`Failed to delete team member: ${response.status} ${response.statusText}`);
         }
 
-        // Refresh the team members list
-        const updatedMembers = await response.json();
-        setMembers(updatedMembers);
+        // Backend returns a boolean; update local list manually
+        setMembers(prev => prev.filter((m) => m.id !== item.id));
 
         toast({
           title: 'Team member deleted',
@@ -300,11 +301,13 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
 
   const handleTogglePublish = async (item: TeamMember) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/team/${item.id}/publish`, {
+      const base = import.meta.env.VITE_CMS_BASE_URL || '';
+      const token = localStorage.getItem('yanc_cms_token') || '';
+      const response = await fetch(`${base}/api/team/${item.id}/publish`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}` // Assuming JWT auth
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ published: !item.isPublished }),
       });
@@ -361,13 +364,16 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         mediaIds: uploadedPhoto ? [uploadedPhoto.id] : [],
       };
 
+      const base = import.meta.env.VITE_CMS_BASE_URL || '';
+      const token = localStorage.getItem('yanc_cms_token') || '';
+
       if (editingItem) {
         // Update existing team member
-        const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/team/${editingItem.id}`, {
+        const response = await fetch(`${base}/api/team/${editingItem.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}` // Assuming JWT auth
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(teamMemberData),
         });
@@ -376,7 +382,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
           throw new Error(`Failed to update team member: ${response.status} ${response.statusText}`);
         }
 
-        // Refresh the team members list
+        // Refresh the team members list (service returns public list)
         const updatedMembers = await response.json();
         setMembers(updatedMembers);
 
@@ -386,11 +392,11 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         });
       } else {
         // Create new team member
-        const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/team`, {
+        const response = await fetch(`${base}/api/team`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}` // Assuming JWT auth
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(teamMemberData),
         });
@@ -399,7 +405,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
           throw new Error(`Failed to create team member: ${response.status} ${response.statusText}`);
         }
 
-        // Refresh the team members list
+        // Refresh the team members list (service returns public list)
         const updatedMembers = await response.json();
         setMembers(updatedMembers);
 
