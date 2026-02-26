@@ -13,8 +13,10 @@ import { FoundersModule } from './modules/founders/founders.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { AboutModule } from './modules/about/about.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { EventGalleryItemsModule } from './modules/event-gallery-items/event-gallery-items.module';
 import { MentorTalksModule } from './modules/mentor-talks/mentor-talks.module';
+import { ActivityModule } from './modules/activity/activity.module';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { MentorTalksModule } from './modules/mentor-talks/mentor-talks.module';
     }),
     SupabaseModule,
     AuthModule,
+    StatsModule,
     MediaModule,
     HeroModule,
     ProgramsModule,
@@ -34,6 +37,9 @@ import { MentorTalksModule } from './modules/mentor-talks/mentor-talks.module';
     AboutModule,
     EventGalleryItemsModule,
     MentorTalksModule,
+    ActivityModule,
+    // Stats module
+    // (imported dynamically to register controller/provider)
   ],
   controllers: [AppController, HealthController],
   providers: [DatabaseHealthService],

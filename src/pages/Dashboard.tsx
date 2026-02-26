@@ -12,12 +12,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Mock data - replace with API calls
-const stats = {
-  events: { total: 24, published: 18, trend: 12 },
-  team: { total: 32, published: 28, trend: 8 },
-  programs: { total: 8, published: 6, trend: 25 },
-  testimonials: { total: 15, published: 12, trend: 5 },
+import { useEffect, useState } from 'react';
+import { apiService } from '@/services/api';
+
+type Stat = { total: number; published: number; trend?: number };
+
+const initialStats: Record<string, Stat> = {
+  events: { total: 0, published: 0, trend: 0 },
+  team: { total: 0, published: 0, trend: 0 },
+  programs: { total: 0, published: 0, trend: 0 },
+  testimonials: { total: 0, published: 0, trend: 0 },
 };
 
 const recentActivity = [
@@ -85,6 +89,57 @@ export default function Dashboard() {
         return 'text-muted-foreground';
     }
   };
+  const [stats, setStats] = useState(initialStats);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_CMS_BASE_URL || ''}/api/stats`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setStats({
+          events: { ...data.events, trend: data.events.trend ?? 0 },
+          team: { ...data.team, trend: data.team.trend ?? 0 },
+          programs: { ...data.programs, trend: data.programs.trend ?? 0 },
+          testimonials: { ...data.testimonials, trend: data.testimonials.trend ?? 0 },
+        });
+      } catch (err) {
+        // keep defaults
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const [recentActivity, setRecentActivity] = useState<
+    {
+      id: string;
+      action: string;
+      contentType: string;
+      contentTitle: string;
+      user: string;
+      timestamp: string;
+    }[]
+  >([]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_CMS_BASE_URL || ''}/api/activity?limit=8`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        setRecentActivity(data);
+      } catch (err) {
+        // ignore
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -100,28 +155,28 @@ export default function Dashboard() {
           value={stats.events.total}
           description={`${stats.events.published} published`}
           icon={Calendar}
-          trend={{ value: stats.events.trend, isPositive: true }}
+          trend={{ value: stats.events.trend ?? 0, isPositive: (stats.events.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Team Members"
           value={stats.team.total}
           description={`${stats.team.published} published`}
           icon={Users}
-          trend={{ value: stats.team.trend, isPositive: true }}
+          trend={{ value: stats.team.trend ?? 0, isPositive: (stats.team.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Programs"
           value={stats.programs.total}
           description={`${stats.programs.published} published`}
           icon={GraduationCap}
-          trend={{ value: stats.programs.trend, isPositive: true }}
+          trend={{ value: stats.programs.trend ?? 0, isPositive: (stats.programs.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Testimonials"
           value={stats.testimonials.total}
           description={`${stats.testimonials.published} published`}
           icon={MessageSquareQuote}
-          trend={{ value: stats.testimonials.trend, isPositive: true }}
+          trend={{ value: stats.testimonials.trend ?? 0, isPositive: (stats.testimonials.trend ?? 0) >= 0 }}
         />
       </div>
 
@@ -136,7 +191,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               {recentActivity.map((activity) => (
                 <div
-                  key={activity.id}
+                  key={`${activity.contentType}-${activity.id}-${activity.timestamp}`}
                   className="flex items-start gap-4 rounded-lg p-3 transition-colors hover:bg-muted/50"
                 >
                   <div
@@ -160,7 +215,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">
-                      {activity.timestamp}
+                      {new Date(activity.timestamp).toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">{activity.user}</p>
                   </div>
