@@ -1,6 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req, Get, Put, UnauthorizedException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { AuthService, LoginRequest, LoginResponse } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Public } from './decorators/public.decorator';
 import type { Request } from 'express';
 
 @Controller('auth')
@@ -80,6 +81,47 @@ export class AuthController {
         throw new UnauthorizedException('Current password is incorrect');
       }
       throw new InternalServerErrorException(err?.message || 'Failed to change password');
+    }
+  }
+
+  /**
+   * Request password reset. Sends email with reset link if user exists.
+   * Body: { email }
+   */
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() body: { email?: string }): Promise<{ message: string }> {
+    const email = typeof body?.email === 'string' ? body.email.trim() : '';
+    if (!email) {
+      throw new BadRequestException('email is required');
+    }
+    return this.authService.requestPasswordReset(email);
+  }
+
+  /**
+   * Reset password using token from email link.
+   * Body: { token, newPassword }
+   */
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() body: { token?: string; newPassword?: string }): Promise<{ message: string }> {
+    const token = typeof body?.token === 'string' ? body.token.trim() : '';
+    const newPassword = typeof body?.newPassword === 'string' ? body.newPassword : '';
+    if (!token || !newPassword) {
+      throw new BadRequestException('token and newPassword are required');
+    }
+    if (newPassword.length < 8) {
+      throw new BadRequestException('newPassword must be at least 8 characters');
+    }
+    try {
+      return await this.authService.resetPassword(token, newPassword);
+    } catch (err: any) {
+      if (err.message && (err.message.includes('Invalid or expired') || err.message.includes('not available'))) {
+        throw new BadRequestException(err.message);
+      }
+      throw new InternalServerErrorException(err?.message || 'Failed to reset password');
     }
   }
 }

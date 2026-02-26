@@ -1,5 +1,5 @@
  import { useState } from 'react';
- import { Navigate } from 'react-router-dom';
+ import { Navigate, Link } from 'react-router-dom';
  import { useAuth } from '@/contexts/AuthContext';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -124,8 +124,13 @@
                </div>
              </div>
  
-             <div className="space-y-2.5">
-               <Label htmlFor="password">Password</Label>
+<div className="space-y-2.5">
+               <div className="flex items-center justify-between">
+                 <Label htmlFor="password">Password</Label>
+                 <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-foreground">
+                   Forgot password?
+                 </Link>
+               </div>
                <div className="relative">
                  <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                  <Input
@@ -139,8 +144,8 @@
                  />
                </div>
              </div>
- 
-             <Button 
+
+             <Button
                type="submit" 
                className="w-full h-11 rounded-xl font-medium text-base shadow-sm hover:shadow-md transition-all active:scale-[0.98]" 
                disabled={isLoading}

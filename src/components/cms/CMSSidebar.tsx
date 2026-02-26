@@ -103,14 +103,18 @@
      >
        {/* Logo Area */}
        <div className="flex h-16 items-center justify-between border-b border-sidebar-border/50 px-4">
-         {!isCollapsed && (
-           <div className="flex items-center gap-2.5 animate-fade-in">
-             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-primary shadow-lg">
-               <span className="text-sm font-bold text-sidebar-primary-foreground">Y</span>
-             </div>
-             <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">YANC CMS</span>
-           </div>
-         )}
+        {!isCollapsed && (
+          <div className="flex items-center gap-2.5 animate-fade-in">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black shadow-lg overflow-hidden">
+              <img
+                src="/favicon.svg"
+                alt="YANC logo"
+                className="h-7 w-7"
+              />
+            </div>
+            <span className="text-lg font-semibold text-sidebar-foreground tracking-tight">YANC CMS</span>
+          </div>
+        )}
          <Button
            variant="ghost"
            size="icon"

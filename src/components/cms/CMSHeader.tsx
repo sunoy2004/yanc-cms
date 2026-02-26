@@ -1,34 +1,88 @@
+import { useEffect, useState } from 'react';
 import { Bell, Search, LogOut, User } from 'lucide-react';
- import { Button } from '@/components/ui/button';
- import { Input } from '@/components/ui/input';
- import {
-   DropdownMenu,
-   DropdownMenuContent,
-   DropdownMenuItem,
-   DropdownMenuLabel,
-   DropdownMenuSeparator,
-   DropdownMenuTrigger,
- } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { NavLink } from 'react-router-dom';
- import { Avatar, AvatarFallback } from '@/components/ui/avatar';
- import { useAuth } from '@/contexts/AuthContext';
- import { cn } from '@/lib/utils';
- 
- interface CMSHeaderProps {
-   sidebarCollapsed?: boolean;
- }
- 
- export function CMSHeader({ sidebarCollapsed = false }: CMSHeaderProps) {
-   const { user, logout } = useAuth();
- 
-   const getInitials = (name: string) => {
-     return name
-       .split(' ')
-       .map((n) => n[0])
-       .join('')
-       .toUpperCase()
-       .slice(0, 2);
-   };
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+
+interface CMSHeaderProps {
+  sidebarCollapsed?: boolean;
+}
+
+type NotificationItem = {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  type: 'activity' | 'system';
+};
+
+export function CMSHeader({ sidebarCollapsed = false }: CMSHeaderProps) {
+  const { user, logout, isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  useEffect(() => {
+    // Fetch recent activity notifications
+    const fetchActivity = async () => {
+      try {
+        const base = (import.meta.env.VITE_CMS_BASE_URL as string) || '';
+        const res = await fetch(`${base}/api/activity?limit=5`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const items: NotificationItem[] = (data || []).map((act: any) => ({
+          id: `activity-${act.contentType}-${act.id}-${act.timestamp}`,
+          title: `${act.action?.toUpperCase?.() || 'UPDATE'} ${act.contentType}`,
+          description: act.contentTitle || '',
+          timestamp: act.timestamp,
+          type: 'activity',
+        }));
+        setNotifications((prev) => {
+          // Preserve any system notifications (like login) and merge new activity
+          const system = prev.filter((n) => n.type === 'system');
+          return [...system, ...items];
+        });
+      } catch {
+        // ignore errors, keep existing notifications
+      }
+    };
+
+    fetchActivity();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const loginNotification: NotificationItem = {
+      id: 'system-login',
+      title: 'Logged in',
+      description: `Welcome back${user?.name ? `, ${user.name}` : ''}.`,
+      timestamp: new Date().toISOString(),
+      type: 'system',
+    };
+    setNotifications((prev) => {
+      // Avoid duplicate login notification
+      const filtered = prev.filter((n) => n.id !== loginNotification.id);
+      return [loginNotification, ...filtered];
+    });
+  }, [isAuthenticated, user?.name]);
  
    return (
      <header
@@ -49,13 +103,40 @@ import { NavLink } from 'react-router-dom';
          </div>
        </div>
  
-       {/* Right side */}
-       <div className="flex items-center gap-3">
-         {/* Notifications */}
-         <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-muted/60 transition-colors">
-           <Bell className="h-5 w-5" />
-           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent animate-pulse" />
-         </Button>
+      {/* Right side */}
+      <div className="flex items-center gap-3">
+        {/* Notifications */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-muted/60 transition-colors">
+              <Bell className="h-5 w-5" />
+              {notifications.length > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent animate-pulse" />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80 rounded-xl shadow-lg border-border/60">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {notifications.length === 0 ? (
+              <DropdownMenuItem className="text-xs text-muted-foreground">
+                No recent notifications
+              </DropdownMenuItem>
+            ) : (
+              notifications.map((n) => (
+                <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5">
+                  <span className="text-xs font-medium">{n.title}</span>
+                  {n.description && (
+                    <span className="text-[11px] text-muted-foreground">{n.description}</span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground/70">
+                    {new Date(n.timestamp).toLocaleString()}
+                  </span>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
  
          {/* User Menu */}
          <DropdownMenu>

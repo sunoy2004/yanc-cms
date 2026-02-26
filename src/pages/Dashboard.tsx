@@ -155,28 +155,24 @@ export default function Dashboard() {
           value={stats.events.total}
           description={`${stats.events.published} published`}
           icon={Calendar}
-          trend={{ value: stats.events.trend ?? 0, isPositive: (stats.events.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Team Members"
           value={stats.team.total}
           description={`${stats.team.published} published`}
           icon={Users}
-          trend={{ value: stats.team.trend ?? 0, isPositive: (stats.team.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Programs"
           value={stats.programs.total}
           description={`${stats.programs.published} published`}
           icon={GraduationCap}
-          trend={{ value: stats.programs.trend ?? 0, isPositive: (stats.programs.trend ?? 0) >= 0 }}
         />
         <StatCard
           title="Testimonials"
           value={stats.testimonials.total}
           description={`${stats.testimonials.published} published`}
           icon={MessageSquareQuote}
-          trend={{ value: stats.testimonials.trend ?? 0, isPositive: (stats.testimonials.trend ?? 0) >= 0 }}
         />
       </div>
 

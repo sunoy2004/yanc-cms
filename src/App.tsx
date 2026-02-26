@@ -23,6 +23,8 @@ import AboutUsManagement from "./pages/AboutUsManagement";
 import MediaLibrary from "./pages/MediaLibrary";
 import Settings from "./pages/Settings";
 import AdminProfile from "./pages/AdminProfile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected CMS routes */}
             <Route element={<CMSLayout />}>
