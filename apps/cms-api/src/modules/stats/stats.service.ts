@@ -25,8 +25,32 @@ export class StatsService {
     }
   }
 
+  /** Events total = upcoming + past (event_content) + event_gallery_items */
+  async getEventsTotal(): Promise<{ total: number; published: number }> {
+    const client = this.client();
+    if (!client) return { total: 0, published: 0 };
+    try {
+      const [upcoming, past, gallery] = await Promise.all([
+        client.from('event_content').select('id', { count: 'exact', head: true }).eq('category', 'upcoming'),
+        client.from('event_content').select('id', { count: 'exact', head: true }).eq('category', 'past'),
+        client.from('event_gallery_items').select('id', { count: 'exact', head: true }),
+      ]);
+      const total =
+        (Number(upcoming.count) || 0) + (Number(past.count) || 0) + (Number(gallery.count) || 0);
+      const [upcomingPub, pastPub] = await Promise.all([
+        client.from('event_content').select('id', { count: 'exact', head: true }).eq('category', 'upcoming').eq('is_active', true),
+        client.from('event_content').select('id', { count: 'exact', head: true }).eq('category', 'past').eq('is_active', true),
+      ]);
+      const published = (Number(upcomingPub.count) || 0) + (Number(pastPub.count) || 0);
+      return { total, published };
+    } catch (err) {
+      this.logger.error('Error counting events total', err);
+      return { total: 0, published: 0 };
+    }
+  }
+
   async getStats() {
-    const events = await this.countTable('events', 'is_active');
+    const events = await this.getEventsTotal();
     const team = await this.countTable('team_members', 'is_active');
     const programs = await this.countTable('programs', 'is_active');
     const testimonials = await this.countTable('testimonials', 'is_active');

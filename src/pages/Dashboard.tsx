@@ -153,25 +153,21 @@ export default function Dashboard() {
         <StatCard
           title="Total Events"
           value={stats.events.total}
-          description={`${stats.events.published} published`}
           icon={Calendar}
         />
         <StatCard
           title="Team Members"
           value={stats.team.total}
-          description={`${stats.team.published} published`}
           icon={Users}
         />
         <StatCard
           title="Programs"
           value={stats.programs.total}
-          description={`${stats.programs.published} published`}
           icon={GraduationCap}
         />
         <StatCard
           title="Testimonials"
           value={stats.testimonials.total}
-          description={`${stats.testimonials.published} published`}
           icon={MessageSquareQuote}
         />
       </div>
