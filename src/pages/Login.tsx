@@ -119,13 +119,13 @@ import { Loader2, Lock, Mail, Eye, EyeOff } from 'lucide-react';
  
           <form onSubmit={handleSubmit} className="space-y-7">
             <div className="space-y-2.5">
-              <Label htmlFor="email">Username or email</Label>
+              <Label htmlFor="email">Email or Username</Label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
                   type="text"
-                  placeholder="admin or user@example.com"
+                  placeholder="example@yanc.in"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-11 h-11 rounded-xl border-border/80 focus:border-accent transition-colors"
