@@ -89,7 +89,7 @@ import { Loader2, Lock, Mail, Eye, EyeOff } from 'lucide-react';
          </div>
         <div className="text-sm text-primary-foreground/60 relative z-10 space-y-0.5">
           <p>© {new Date().getFullYear()} YANC. All rights reserved.</p>
-          <p className="text-xs text-primary-foreground/50">v2026.02.26</p>
+          <p className="text-xs text-primary-foreground/50">v2026.03.01</p>
         </div>
        </div>
  
