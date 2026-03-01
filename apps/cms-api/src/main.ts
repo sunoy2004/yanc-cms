@@ -64,23 +64,31 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
-    // CORS configuration - allow specific trusted origins (and common local dev origins)
+    // CORS configuration - allow specific trusted origins and any localhost/127.0.0.1 (any port)
     const allowedOrigins = [
       'https://website-1095720168864.asia-south1.run.app',
       'https://ynac-cms-bk-1095720168864.asia-south1.run.app',
       'https://yanc-cms-1095720168864.asia-south1.run.app',
       'http://localhost:3000',
       'http://localhost:5173',
-      'http://127.0.0.1:5173',
       'http://localhost:8080',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:8080',
     ];
+    const isLocalOrigin = (origin: string) => {
+      try {
+        const u = new URL(origin);
+        return u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+      } catch {
+        return false;
+      }
+    };
 
     app.enableCors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (like server-to-server or curl)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin) || isLocalOrigin(origin)) {
           return callback(null, true);
         }
         return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
