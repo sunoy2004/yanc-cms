@@ -21,6 +21,10 @@ export class UpdateEventDto {
   @IsOptional()
   eventDate?: string;
 
+  @IsString()
+  @IsOptional()
+  registrationUrl?: string;
+
   @IsIn(['upcoming', 'past'])
   @IsOptional()
   category?: 'upcoming' | 'past';

@@ -61,6 +61,7 @@ export default function EventsPage() {
     speaker: '',
     location: '',
     eventDate: '',
+    registrationUrl: '',
     image: '',
     imageAlt: '',
     gallery: [] as MediaItem[],
@@ -143,7 +144,7 @@ export default function EventsPage() {
       speaker: '',
       location: '',
       eventDate: '',
-
+      registrationUrl: '',
       image: '',
       imageAlt: '',
       gallery: [],
@@ -154,13 +155,14 @@ export default function EventsPage() {
 
   const handleEdit = (item: Event) => {
     setEditingItem(item);
+    const regUrl = (item as Event & { registration_url?: string }).registration_url ?? item.registrationUrl ?? '';
     setFormData({
       title: item.title,
       description: item.description,
       speaker: item.speaker || '',
       location: item.location,
       eventDate: item.eventDate,
-
+      registrationUrl: regUrl,
       image: item.image,
       imageAlt: item.imageAlt || '',
       gallery: item.gallery,
@@ -218,6 +220,7 @@ export default function EventsPage() {
         speaker: formData.speaker,
         location: formData.location,
         eventDate: formData.eventDate,
+        registrationUrl: formData.registrationUrl.trim() || undefined,
         published: formData.isPublished,
         displayOrder: events.length + 1,
         mediaIds: formData.gallery.map(item => item.id).filter(Boolean) as string[],
@@ -361,7 +364,22 @@ export default function EventsPage() {
                     placeholder="City, State or Virtual"
                   />
                 </div>
+              </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="registrationUrl">Registration URL</Label>
+                <Input
+                  id="registrationUrl"
+                  type="url"
+                  value={formData.registrationUrl}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, registrationUrl: e.target.value }))
+                  }
+                  placeholder="https://example.com/register"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used by the &quot;Register Now&quot; button on the website for this event.
+                </p>
               </div>
 
               <div className="space-y-2">

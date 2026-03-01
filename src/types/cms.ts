@@ -36,6 +36,8 @@ export interface Event {
   speaker: string;
   location: string;
   eventDate: string;
+  /** URL for the "Register Now" CTA on the frontend upcoming events section */
+  registrationUrl?: string;
   category: 'upcoming' | 'past';
   image: string;
   imageAlt?: string;

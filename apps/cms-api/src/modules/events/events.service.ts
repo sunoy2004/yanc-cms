@@ -126,6 +126,7 @@ export class EventsService {
           speaker: dto.speaker || '',
           location: dto.location || '',
           event_date: dto.eventDate || new Date().toISOString(),
+          registration_url: dto.registrationUrl || null,
           category: dto.category,
           type: dto.category, // Also insert type for strict isolation
           is_active: dto.published ?? true,
@@ -211,6 +212,7 @@ export class EventsService {
       if (dto.speaker !== undefined) updateData.speaker = dto.speaker;
       if (dto.location !== undefined) updateData.location = dto.location;
       if (dto.eventDate !== undefined) updateData.event_date = dto.eventDate;
+      if (dto.registrationUrl !== undefined) updateData.registration_url = dto.registrationUrl || null;
       if (dto.category !== undefined) updateData.category = dto.category;
       if (dto.published !== undefined) updateData.is_active = dto.published;
       if (dto.displayOrder !== undefined) updateData.display_order = dto.displayOrder;

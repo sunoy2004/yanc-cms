@@ -11,6 +11,7 @@ interface CreateEventDto {
   speaker?: string;
   location?: string;
   eventDate?: string;
+  registrationUrl?: string;
   published?: boolean;
   displayOrder?: number;
   mediaIds?: string[];
@@ -23,6 +24,7 @@ interface UpdateEventDto {
   speaker?: string;
   location?: string;
   eventDate?: string;
+  registrationUrl?: string;
   published?: boolean;
   displayOrder?: number;
   mediaIds?: string[];
