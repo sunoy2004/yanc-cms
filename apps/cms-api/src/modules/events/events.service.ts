@@ -117,23 +117,44 @@ export class EventsService {
 
       this.logger.log('Creating new event');
 
-      // Insert the new event
-      const { data: newEvent, error: insertError } = await supabaseClient
+      const basePayload = {
+        title: dto.title,
+        description: dto.description || '',
+        speaker: dto.speaker || '',
+        location: dto.location || '',
+        event_date: dto.eventDate || new Date().toISOString(),
+        category: dto.category,
+        type: dto.category, // Also insert type for strict isolation
+        is_active: dto.published ?? true,
+        display_order: dto.displayOrder || 0,
+      };
+
+      // Insert with registration_url first; if column doesn't exist (migration not run), retry without it
+      let insertPayload: Record<string, unknown> = {
+        ...basePayload,
+        registration_url: dto.registrationUrl || null,
+      };
+      let { data: newEvent, error: insertError } = await supabaseClient
         .from('event_content')
-        .insert({
-          title: dto.title,
-          description: dto.description || '',
-          speaker: dto.speaker || '',
-          location: dto.location || '',
-          event_date: dto.eventDate || new Date().toISOString(),
-          registration_url: dto.registrationUrl || null,
-          category: dto.category,
-          type: dto.category, // Also insert type for strict isolation
-          is_active: dto.published ?? true,
-          display_order: dto.displayOrder || 0,
-        })
+        .insert(insertPayload)
         .select()
         .single();
+
+      if (insertError && (insertError.message?.includes('registration_url') || insertError.message?.includes('column') && insertError.message?.includes('does not exist'))) {
+        this.logger.warn('registration_url column missing? Retrying without it. Run migration 10_add_event_registration_url.sql on event_content.');
+        insertPayload = basePayload;
+        const retry = await supabaseClient
+          .from('event_content')
+          .insert(insertPayload)
+          .select()
+          .single();
+        if (retry.error) {
+          this.logger.error('Error creating event (retry):', retry.error);
+          throw retry.error;
+        }
+        newEvent = retry.data;
+        insertError = null;
+      }
 
       if (insertError) {
         this.logger.error('Error creating event:', insertError);
@@ -206,7 +227,7 @@ export class EventsService {
       this.logger.log(`Updating event with ID: ${id}`);
 
       // Prepare update data with proper field mapping
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (dto.title !== undefined) updateData.title = dto.title;
       if (dto.description !== undefined) updateData.description = dto.description;
       if (dto.speaker !== undefined) updateData.speaker = dto.speaker;
@@ -217,13 +238,34 @@ export class EventsService {
       if (dto.published !== undefined) updateData.is_active = dto.published;
       if (dto.displayOrder !== undefined) updateData.display_order = dto.displayOrder;
 
-      // Update the event
-      const { data: updatedEvent, error: updateError } = await supabaseClient
+      let updatedEvent: { id: string } | null = null;
+      let updateError: Error | null = null;
+      let result = await supabaseClient
         .from('event_content')
         .update(updateData)
         .eq('id', id)
         .select()
         .single();
+      updateError = result.error;
+      updatedEvent = result.data;
+
+      // If update failed and error suggests registration_url column missing, retry without it
+      if (updateError && updateData.registration_url !== undefined && (updateError.message?.includes('registration_url') || (updateError.message?.includes('column') && updateError.message?.includes('does not exist')))) {
+        this.logger.warn('registration_url column missing? Retrying update without it. Run migration 10_add_event_registration_url.sql on event_content.');
+        const { registration_url: _r, ...rest } = updateData;
+        result = await supabaseClient
+          .from('event_content')
+          .update(rest)
+          .eq('id', id)
+          .select()
+          .single();
+        if (result.error) {
+          this.logger.error('Error updating event (retry):', result.error);
+          throw result.error;
+        }
+        updatedEvent = result.data;
+        updateError = null;
+      }
 
       if (updateError) {
         this.logger.error('Error updating event:', updateError);
