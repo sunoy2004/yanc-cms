@@ -179,6 +179,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
     image: '',
     socialLinks: [] as SocialLink[],
     isPublished: true,
+    order: 0,
   });
 
   // Photo upload state
@@ -193,6 +194,16 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
     item.isPublished ?? (item as any).isPublished ?? (item as any).is_active ?? true;
 
   const columns: Column<TeamMember>[] = [
+    {
+      key: 'order',
+      header: 'Order',
+      className: 'w-16',
+      render: (item) => (
+        <span className="text-sm text-muted-foreground">
+          {item.order ?? '-'}
+        </span>
+      ),
+    },
     {
       key: 'name',
       header: 'Member',
@@ -277,6 +288,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       image: '',
       socialLinks: [],
       isPublished: true,
+      order: members.length + 1,
     });
     setUploadedPhoto(null);
     setIsDialogOpen(true);
@@ -295,6 +307,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       image: item.image,
       socialLinks: item.socialLinks || [],
       isPublished: getIsPublished(item as TeamMember & { is_active?: boolean }),
+      order: item.order,
     });
     // Set uploaded photo state if there's an image URL
     if (item.image) {
@@ -347,6 +360,51 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
     }
   };
 
+  const handleBulkDelete = async (items: TeamMember[]) => {
+    if (!items.length) return;
+    if (
+      !confirm(
+        `Delete ${items.length} team member(s)? This will remove them from this section.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const base = import.meta.env.VITE_CMS_BASE_URL || '';
+      const token = localStorage.getItem('yanc_cms_token') || '';
+
+      for (const item of items) {
+        const res = await fetch(`${base}/api/team/${item.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (!res.ok) {
+          throw new Error(
+            `Failed to delete "${item.name}": ${res.status} ${res.statusText}`
+          );
+        }
+      }
+
+      await loadTeamMembers();
+      toast({
+        title: 'Team members deleted',
+        description: `${items.length} member(s) have been removed.`,
+      });
+    } catch (error) {
+      console.error('Error bulk deleting team members:', error);
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to delete some team members. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
   const handleTogglePublish = async (item: TeamMember) => {
     try {
       const currentlyPublished = getIsPublished(item as TeamMember & { is_active?: boolean });
@@ -409,7 +467,12 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         bio: formData.bio,
         section: formData.section,
         published: formData.isPublished,
-        order: editingItem ? editingItem.order : members.length + 1, // Use existing order if editing, otherwise calculate
+        order:
+          formData.order && formData.order > 0
+            ? formData.order
+            : editingItem
+            ? editingItem.order
+            : members.length + 1,
         mediaIds: uploadedPhoto ? [uploadedPhoto.id] : [],
       };
 
@@ -596,6 +659,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onBulkDelete={handleBulkDelete}
         onTogglePublish={handleTogglePublish}
         isPublished={(item) => getIsPublished(item as TeamMember & { is_active?: boolean })}
         searchPlaceholder="Search team members..."
@@ -729,6 +793,26 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
                   placeholder="Enter a brief biography..."
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="order">Display Order</Label>
+                <Input
+                  id="order"
+                  type="number"
+                  min={1}
+                  value={formData.order || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      order: Number(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="1"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Members are shown in ascending order (1 appears first).
+                </p>
               </div>
 
               {/* Social Links */}
