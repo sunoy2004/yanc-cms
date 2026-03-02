@@ -395,26 +395,41 @@ export class TeamService {
 
       this.logger.log(`Updating team member with ID: ${id}`);
 
+      // Detect whether the section column exists (for backwards-compatible updates)
+      let hasSectionColumn = false;
+      try {
+        const { error: testError } = await supabaseClient
+          .from('team_members')
+          .select('section')
+          .limit(1);
+        if (!testError) {
+          hasSectionColumn = true;
+        }
+      } catch {
+        // ignore – we'll fall back to legacy type handling
+      }
+
       // Prepare update data with proper field mapping
       const updateData: any = {};
       if (dto.name !== undefined) updateData.name = dto.name;
       if (dto.role !== undefined) updateData.role = dto.role;
       if (dto.title !== undefined) updateData.title = dto.title;
       if (dto.bio !== undefined) updateData.bio = dto.bio;
-      // New schema: section-based grouping; keep legacy type in sync when needed
-      if ((dto as any).section !== undefined) {
-        updateData.section = (dto as any).section;
+
+      if (dto.section !== undefined) {
         const sectionTypeMap: Record<string, string> = {
           executive_management: 'REGULAR',
           cohort_founders: 'FOUNDER',
           advisory_board: 'ADVISOR',
           global_mentors: 'MENTOR',
         };
-        updateData.type =
-          sectionTypeMap[(dto as any).section] ?? updateData.type;
-      }
-      if ((dto as any).type !== undefined) {
-        updateData.type = (dto as any).type;
+
+        if (hasSectionColumn) {
+          updateData.section = dto.section;
+        } else {
+          // Legacy schema – update type instead
+          updateData.type = sectionTypeMap[dto.section] || updateData.type;
+        }
       }
       if (dto.published !== undefined) updateData.is_active = dto.published;
       if (dto.order !== undefined) updateData.order = dto.order;
