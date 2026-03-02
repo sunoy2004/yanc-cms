@@ -180,13 +180,17 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
     socialLinks: [] as SocialLink[],
     isPublished: true,
   });
-  
+
   // Photo upload state
   const [uploadedPhoto, setUploadedPhoto] = useState<MediaItem | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pageTitle = memberTypeLabels[type] || 'Team Management';
+
+  // Normalize publish flag from API (handles both isPublished and is_active)
+  const getIsPublished = (item: TeamMember & { is_active?: boolean }) =>
+    item.isPublished ?? (item as any).isPublished ?? (item as any).is_active ?? true;
 
   const columns: Column<TeamMember>[] = [
     {
@@ -243,14 +247,19 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       key: 'isPublished',
       header: 'Status',
       render: (item) => (
-        <span
-          className={cn(
-            'cms-badge',
-            item.isPublished ? 'cms-badge-success' : 'cms-badge-muted'
-          )}
-        >
-          {item.isPublished ? 'Published' : 'Draft'}
-        </span>
+        (() => {
+          const published = getIsPublished(item as TeamMember & { is_active?: boolean });
+          return (
+            <span
+              className={cn(
+                'cms-badge',
+                published ? 'cms-badge-success' : 'cms-badge-muted'
+              )}
+            >
+              {published ? 'Published' : 'Draft'}
+            </span>
+          );
+        })()
       ),
     },
   ];
@@ -285,7 +294,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
                                type === 'advisory' ? 'advisory_board' : 'global_mentors'),
       image: item.image,
       socialLinks: item.socialLinks || [],
-      isPublished: item.isPublished,
+      isPublished: getIsPublished(item as TeamMember & { is_active?: boolean }),
     });
     // Set uploaded photo state if there's an image URL
     if (item.image) {
@@ -340,6 +349,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
 
   const handleTogglePublish = async (item: TeamMember) => {
     try {
+      const currentlyPublished = getIsPublished(item as TeamMember & { is_active?: boolean });
       const base = import.meta.env.VITE_CMS_BASE_URL || '';
       const token = localStorage.getItem('yanc_cms_token') || '';
       const response = await fetch(`${base}/api/team/${item.id}/publish`, {
@@ -348,7 +358,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ published: !item.isPublished }),
+        body: JSON.stringify({ published: !currentlyPublished }),
       });
 
       if (!response.ok) {
@@ -358,13 +368,13 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       // Update local state
       setMembers((prev) =>
         prev.map((i) =>
-          i.id === item.id ? { ...i, isPublished: !i.isPublished } : i
+          i.id === item.id ? { ...i, isPublished: !currentlyPublished } : i
         )
       );
 
       toast({
-        title: item.isPublished ? 'Member unpublished' : 'Member published',
-        description: `"${item.name}" is now ${item.isPublished ? 'hidden' : 'visible'}.`,
+        title: currentlyPublished ? 'Member unpublished' : 'Member published',
+        description: `"${item.name}" is now ${currentlyPublished ? 'hidden' : 'visible'}.`,
       });
     } catch (error) {
       console.error('Error toggling publish status:', error);
@@ -587,7 +597,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         onEdit={handleEdit}
         onDelete={handleDelete}
         onTogglePublish={handleTogglePublish}
-        isPublished={(item) => item.isPublished}
+        isPublished={(item) => getIsPublished(item as TeamMember & { is_active?: boolean })}
         searchPlaceholder="Search team members..."
         emptyMessage="No team members found. Add your first member."
       />

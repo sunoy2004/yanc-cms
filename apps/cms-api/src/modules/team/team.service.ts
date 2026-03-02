@@ -126,9 +126,14 @@ export class TeamService {
             }
 
             this.logger.log(`✅ Returning ${filteredMediaItems.length} media items for team member ${member.id}`);
-            // Also provide imageUrl for the first image (primary image)
+            // Also provide imageUrl and isPublished flag for frontend
             const imageUrl = filteredMediaItems.length > 0 ? filteredMediaItems[0].url : null;
-            return { ...member, mediaItems: filteredMediaItems, imageUrl };
+            return {
+              ...member,
+              mediaItems: filteredMediaItems,
+              imageUrl,
+              isPublished: member.is_active ?? true,
+            };
           }
 
           return member;
@@ -242,7 +247,12 @@ export class TeamService {
         })
       );
 
-      return teamMembersWithMedia;
+      const normalized = teamMembersWithMedia.map((member: any) => ({
+        ...member,
+        isPublished: member.isPublished ?? member.is_active ?? true,
+      }));
+
+      return normalized;
     } catch (error) {
       this.logger.error('Unexpected error fetching ADMIN team members:', error);
       return [];
@@ -589,9 +599,14 @@ export class TeamService {
             }
 
             this.logger.log(`✅ Returning ${filteredMediaItems.length} media items for team member ${member.id}`);
-            // Also provide imageUrl for the first image (primary image)
+            // Also provide imageUrl and isPublished flag for frontend
             const imageUrl = filteredMediaItems.length > 0 ? filteredMediaItems[0].url : null;
-            return { ...member, mediaItems: filteredMediaItems, imageUrl };
+            return {
+              ...member,
+              mediaItems: filteredMediaItems,
+              imageUrl,
+              isPublished: member.is_active ?? true,
+            };
           }
 
           return member;
