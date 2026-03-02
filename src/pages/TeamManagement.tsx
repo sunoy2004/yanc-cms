@@ -309,11 +309,12 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       isPublished: getIsPublished(item as TeamMember & { is_active?: boolean }),
       order: item.order,
     });
-    // Set uploaded photo state if there's an image URL
-    if (item.image) {
+    // Set uploaded photo state if there's an existing image (from imageUrl or image)
+    const existingImageUrl = (item as any).imageUrl || item.image;
+    if (existingImageUrl) {
       setUploadedPhoto({
         id: `existing-${item.id}`,
-        url: item.image,
+        url: existingImageUrl,
         type: 'image',
         alt: `${item.name} profile photo`,
         order: 0,
