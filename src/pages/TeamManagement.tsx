@@ -459,6 +459,32 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         return;
       }
 
+      // Determine mediaIds behavior:
+      // - For new members: send new upload id if present, otherwise [] (no media)
+      // - For edits:
+      //   - If user uploaded a NEW photo in this session → send its mediaId to replace
+      //   - If no new upload and user didn't remove photo → don't send mediaIds (keep existing)
+      //   - If user removed photo (uploadedPhoto is null) → send [] to clear gallery
+      let mediaIds: string[] | undefined;
+      const isNewUpload =
+        uploadedPhoto && !uploadedPhoto.id.startsWith('existing-');
+
+      if (!editingItem) {
+        // Creating: attach new media if present
+        mediaIds = isNewUpload ? [uploadedPhoto!.id] : [];
+      } else {
+        if (isNewUpload) {
+          // Replace existing media with new upload
+          mediaIds = [uploadedPhoto!.id];
+        } else if (uploadedPhoto) {
+          // Existing photo only (no change) -> don't touch media associations
+          mediaIds = undefined;
+        } else {
+          // Photo explicitly removed -> clear media
+          mediaIds = [];
+        }
+      }
+
       // Prepare the data to send to the API
       const teamMemberData = {
         name: formData.name,
@@ -473,7 +499,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
             : editingItem
             ? editingItem.order
             : members.length + 1,
-        mediaIds: uploadedPhoto ? [uploadedPhoto.id] : [],
+        ...(mediaIds !== undefined ? { mediaIds } : {}),
       };
 
       const base = import.meta.env.VITE_CMS_BASE_URL || '';
