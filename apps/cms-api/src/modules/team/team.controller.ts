@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Patch, Query } from '@nestjs/common';
 import { TeamService } from './team.service';
-import { CreateTeamMemberDto } from '../../dtos/team.dto';
-import { UpdateTeamMemberDto } from '../../dtos/team-update.dto';
+import { CreateTeamMemberDto, UpdateTeamMemberDto } from '../../dtos/team.dto';
 import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('team')
