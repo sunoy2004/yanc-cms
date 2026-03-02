@@ -24,8 +24,16 @@ export class TeamController {
     return this.teamService.createTeamMember(createTeamMemberDto);
   }
 
+  // Keep PUT for backward compatibility
   @Public()
   @Put(':id')
+  async updateTeamMemberPut(@Param('id') id: string, @Body() updateTeamMemberDto: UpdateTeamMemberDto) {
+    return this.teamService.updateTeamMember(id, updateTeamMemberDto);
+  }
+
+  // Preferred for partial updates from CMS
+  @Public()
+  @Patch(':id')
   async updateTeamMember(@Param('id') id: string, @Body() updateTeamMemberDto: UpdateTeamMemberDto) {
     return this.teamService.updateTeamMember(id, updateTeamMemberDto);
   }

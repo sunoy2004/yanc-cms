@@ -480,9 +480,9 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
       const token = localStorage.getItem('yanc_cms_token') || '';
 
       if (editingItem) {
-        // Update existing team member
+        // Update existing team member (partial update via PATCH)
         const response = await fetch(`${base}/api/team/${editingItem.id}`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
