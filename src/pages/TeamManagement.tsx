@@ -96,34 +96,73 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
+  const loadTeamMembers = async () => {
+    const base = import.meta.env.VITE_CMS_BASE_URL || '';
+    const token = localStorage.getItem('yanc_cms_token') || '';
+    const section =
+      type === 'executive'
+        ? 'executive_management'
+        : type === 'cohort_founder'
+        ? 'cohort_founders'
+        : type === 'advisory'
+        ? 'advisory_board'
+        : 'global_mentors';
+
+    try {
+      // Try admin endpoint first (shows published + draft)
+      const adminRes = await fetch(`${base}/api/team?section=${section}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (adminRes.ok) {
+        const data = await adminRes.json();
+        setMembers(data);
+        return;
+      }
+
+      // If admin route doesn't exist (404), gracefully fall back to public endpoint
+      if (adminRes.status === 404) {
+        const publicRes = await fetch(
+          `${base}/api/team/public?section=${section}`,
+          {
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+        if (publicRes.ok) {
+          const data = await publicRes.json();
+          setMembers(data);
+          return;
+        }
+
+        throw new Error(
+          `Failed to load team members for section ${section}: ${publicRes.status} ${publicRes.statusText}`
+        );
+      }
+
+      throw new Error(
+        `Failed to load team members for section ${section}: ${adminRes.status} ${adminRes.statusText}`
+      );
+    } catch (error) {
+      console.error('Error loading team members:', error);
+      setMembers([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load team members. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setInitialLoadComplete(true);
+    }
+  };
+
   // Load team members based on section
   useEffect(() => {
-    const loadTeamMembers = async () => {
-      try {
-        // Map frontend type to backend section
-        const section = type === 'executive' ? 'executive_management' : 
-                       type === 'cohort_founder' ? 'cohort_founders' :
-                       type === 'advisory' ? 'advisory_board' : 'global_mentors';
-        
-        const response = await fetch(`${import.meta.env.VITE_CMS_BASE_URL}/api/team/public?section=${section}`);
-        if (response.ok) {
-          const data = await response.json();
-          setMembers(data);
-        } else {
-          console.error(`Failed to load team members for section ${section}:`, response.status, response.statusText);
-          // Fallback to mock data if API fails
-          setMembers(mockTeamMembers.filter((m) => m.memberType === type));
-        }
-      } catch (error) {
-        console.error('Error loading team members:', error);
-        // Fallback to mock data if API fails
-        setMembers(mockTeamMembers.filter((m) => m.memberType === type));
-      } finally {
-        setInitialLoadComplete(true);
-      }
-    };
-
     loadTeamMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<TeamMember | null>(null);
@@ -381,10 +420,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         if (!response.ok) {
           throw new Error(`Failed to update team member: ${response.status} ${response.statusText}`);
         }
-
-        // Refresh the team members list (service returns public list)
-        const updatedMembers = await response.json();
-        setMembers(updatedMembers);
+        await loadTeamMembers();
 
         toast({
           title: 'Team member updated',
@@ -404,10 +440,7 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
         if (!response.ok) {
           throw new Error(`Failed to create team member: ${response.status} ${response.statusText}`);
         }
-
-        // Refresh the team members list (service returns public list)
-        const updatedMembers = await response.json();
-        setMembers(updatedMembers);
+        await loadTeamMembers();
 
         toast({
           title: 'Team member created',

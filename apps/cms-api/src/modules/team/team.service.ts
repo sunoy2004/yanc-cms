@@ -142,6 +142,113 @@ export class TeamService {
     }
   }
 
+  // Admin/CMS view: return team members including inactive (unpublished)
+  async getTeamMembersAdmin(section?: string) {
+    try {
+      const supabaseClient = this.supabase.getClient();
+      if (!supabaseClient) {
+        this.logger.warn('Supabase client not available, returning empty team members');
+        return [];
+      }
+  
+      let useSectionFilter = false;
+      if (section) {
+        try {
+          const { error: testError } = await supabaseClient
+            .from('team_members')
+            .select('section')
+            .limit(1);
+          if (!testError) {
+            useSectionFilter = true;
+          }
+        } catch {
+          this.logger.warn('Section column not found in team_members table (admin view)');
+        }
+      }
+
+      let query;
+      if (useSectionFilter && section) {
+        query = supabaseClient
+          .from('team_members')
+          .select('*')
+          .eq('section', section);
+      } else if (section) {
+        const typeMap: Record<string, string> = {
+          'executive_management': 'REGULAR',
+          'cohort_founders': 'FOUNDER',
+          'advisory_board': 'ADVISOR',
+          'global_mentors': 'MENTOR'
+        };
+        const legacyType = typeMap[section] || 'REGULAR';
+        query = supabaseClient
+          .from('team_members')
+          .select('*')
+          .filter('type', 'eq', legacyType);
+      } else {
+        query = supabaseClient
+          .from('team_members')
+          .select('*');
+      }
+
+      const { data, error } = await query.order('order');
+      if (error) {
+        this.logger.error('Error fetching ADMIN team members:', error);
+        return [];
+      }
+
+      const teamMembersWithMedia = await Promise.all(
+        data.map(async (member) => {
+          const { data: memberMediaItems, error: mediaError } = await supabaseClient
+            .from('team_member_media_item')
+            .select('id, type, url, alt_text, order, created_at, media_id')
+            .eq('team_member_id', member.id)
+            .order('order');
+
+          if (!mediaError && memberMediaItems) {
+            const filteredMediaItems = [];
+            for (const item of memberMediaItems) {
+              if (item.media_id) {
+                const { data: mediaRecord, error: mediaRecordError } = await supabaseClient
+                  .from('media')
+                  .select('storage_path')
+                  .eq('id', item.media_id)
+                  .single();
+                if (!mediaRecordError && mediaRecord && mediaRecord.storage_path) {
+                  const supabaseUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaRecord.storage_path}`;
+                  filteredMediaItems.push({
+                    id: item.id,
+                    type: item.type === 'image' ? 'image' : 'video',
+                    url: supabaseUrl,
+                    alt: item.alt_text,
+                    order: item.order,
+                    createdAt: item.created_at || member.created_at,
+                  });
+                }
+              } else if (item.url && item.url.includes('supabase.co/storage')) {
+                filteredMediaItems.push({
+                  id: item.id,
+                  type: item.type === 'image' ? 'image' : 'video',
+                  url: item.url,
+                  alt: item.alt_text,
+                  order: item.order,
+                  createdAt: item.created_at || member.created_at,
+                });
+              }
+            }
+            const imageUrl = filteredMediaItems.length > 0 ? filteredMediaItems[0].url : null;
+            return { ...member, mediaItems: filteredMediaItems, imageUrl };
+          }
+          return member;
+        })
+      );
+
+      return teamMembersWithMedia;
+    } catch (error) {
+      this.logger.error('Unexpected error fetching ADMIN team members:', error);
+      return [];
+    }
+  }
+
   async createTeamMember(dto: CreateTeamMemberDto) {
     try {
       const supabaseClient = this.supabase.getClient();

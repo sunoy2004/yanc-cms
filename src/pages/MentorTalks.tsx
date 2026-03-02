@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Loader2, Save, Calendar, Play } from 'lucide-react';
+import { Plus, Loader2, Save, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { MentorTalk, MediaItem } from '@/types/cms';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,6 @@ export default function MentorTalksPage() {
     date: '',
     description: '',
     content: '',
-    videoUrl: '',
     thumbnail: '',
     gallery: [] as MediaItem[],
     isPublished: true,
@@ -110,7 +109,6 @@ export default function MentorTalksPage() {
       date: '',
       description: '',
       content: '',
-      videoUrl: '',
       thumbnail: '',
       gallery: [],
       isPublished: true,
@@ -127,7 +125,6 @@ export default function MentorTalksPage() {
       date: item.date || '',
       description: item.description,
       content: item.content,
-      videoUrl: item.videoUrl || '',
       thumbnail: item.thumbnail || '',
       gallery: item.gallery,
       isPublished: item.isPublished,
@@ -176,9 +173,6 @@ export default function MentorTalksPage() {
     setIsLoading(true);
 
     try {
-      // Extract media IDs from gallery items
-      const mediaIds = formData.gallery.map(item => item.id);
-
       const talkData = {
         title: formData.title,
         speaker: formData.speaker,
@@ -186,10 +180,9 @@ export default function MentorTalksPage() {
         talkDate: formData.date,
         description: formData.description,
         content: formData.content,
-        videoUrl: formData.videoUrl,
         thumbnailUrl: formData.thumbnail,
         published: formData.isPublished,
-        mediaIds: mediaIds,
+        mediaIds: formData.gallery.map(item => item.id),
         order: talks.length + 1,
       };
 
@@ -326,19 +319,6 @@ export default function MentorTalksPage() {
                   }
                   placeholder="Brief description of the talk"
                   rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="videoUrl">Video URL</Label>
-                <Input
-                  id="videoUrl"
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))
-                  }
-                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
 

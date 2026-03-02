@@ -74,7 +74,6 @@ export interface MentorTalk {
   date: string;
   description: string;
   content: string;
-  videoUrl?: string;
   thumbnail?: string;
   gallery: MediaItem[];
   isPublished: boolean;

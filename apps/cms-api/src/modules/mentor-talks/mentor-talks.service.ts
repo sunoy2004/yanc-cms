@@ -94,7 +94,6 @@ export class MentorTalksService {
             date: talk.date,
             description: talk.description,
             content: talk.content,
-            videoUrl: talk.video_url,
             thumbnail: talk.thumbnail_url,
             gallery: processedGallery.sort((a, b) => (a.order || 0) - (b.order || 0)),
             isPublished: talk.is_active,
@@ -276,7 +275,6 @@ export class MentorTalksService {
           date: dto.talkDate,
           description: dto.description || '',
           content: dto.content || '',
-          video_url: dto.videoUrl || '',
           thumbnail_url: dto.thumbnailUrl || '',
           is_active: dto.published ?? true,
           "order": dto.order || 0,
@@ -321,7 +319,6 @@ export class MentorTalksService {
       if (dto.talkDate !== undefined) updateData.date = dto.talkDate;
       if (dto.description !== undefined) updateData.description = dto.description;
       if (dto.content !== undefined) updateData.content = dto.content;
-      if (dto.videoUrl !== undefined) updateData.video_url = dto.videoUrl;
       if (dto.thumbnailUrl !== undefined) updateData.thumbnail_url = dto.thumbnailUrl;
       if (dto.published !== undefined) updateData.is_active = dto.published;
       if (dto.order !== undefined) updateData.order = dto.order;

@@ -24,10 +24,6 @@ export class CreateMentorTalkDto {
 
   @IsString()
   @IsOptional()
-  videoUrl?: string;
-
-  @IsString()
-  @IsOptional()
   thumbnailUrl?: string;
 
   @IsBoolean()

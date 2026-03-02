@@ -42,4 +42,10 @@ export class TeamController {
     const updateDto: UpdateTeamMemberDto = { published };
     return this.teamService.updateTeamMember(id, updateDto);
   }
+
+  // Admin/CMS view: list team members (including unpublished) by section
+  @Get()
+  async getAdminTeamMembers(@Query('section') section?: string) {
+    return this.teamService.getTeamMembersAdmin(section);
+  }
 }

@@ -27,10 +27,6 @@ export class UpdateMentorTalkDto {
 
   @IsString()
   @IsOptional()
-  videoUrl?: string;
-
-  @IsString()
-  @IsOptional()
   thumbnailUrl?: string;
 
   @IsBoolean()
