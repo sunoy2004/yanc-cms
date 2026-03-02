@@ -401,7 +401,21 @@ export class TeamService {
       if (dto.role !== undefined) updateData.role = dto.role;
       if (dto.title !== undefined) updateData.title = dto.title;
       if (dto.bio !== undefined) updateData.bio = dto.bio;
-      if (dto.type !== undefined) updateData.type = dto.type;
+      // New schema: section-based grouping; keep legacy type in sync when needed
+      if ((dto as any).section !== undefined) {
+        updateData.section = (dto as any).section;
+        const sectionTypeMap: Record<string, string> = {
+          executive_management: 'REGULAR',
+          cohort_founders: 'FOUNDER',
+          advisory_board: 'ADVISOR',
+          global_mentors: 'MENTOR',
+        };
+        updateData.type =
+          sectionTypeMap[(dto as any).section] ?? updateData.type;
+      }
+      if ((dto as any).type !== undefined) {
+        updateData.type = (dto as any).type;
+      }
       if (dto.published !== undefined) updateData.is_active = dto.published;
       if (dto.order !== undefined) updateData.order = dto.order;
 
