@@ -383,53 +383,72 @@ export class MentorTalksService {
 
   private async updateTalkGallery(supabaseClient: any, talkId: string, mediaIds: string[]) {
     try {
-      // Remove existing gallery items
+      // When mediaIds is undefined, leave gallery as-is
+      if (mediaIds === undefined) {
+        return;
+      }
+
+      // If mediaIds is an empty array, clear the gallery explicitly
+      if (!mediaIds || mediaIds.length === 0) {
+        await supabaseClient
+          .from('mentor_talk_gallery_items')
+          .delete()
+          .eq('mentor_talk_id', talkId);
+        this.logger.log(`✅ Cleared gallery for talk ${talkId}`);
+        return;
+      }
+
+      // Build new gallery items BEFORE deleting existing ones to avoid data loss
+      const galleryItems = [];
+
+      for (let i = 0; i < mediaIds.length; i++) {
+        const mediaId = mediaIds[i];
+        const { data: mediaItem, error: mediaError } = await supabaseClient
+          .from('media')
+          .select('storage_path, storage_type')
+          .eq('id', mediaId)
+          .single();
+
+        if (mediaError) {
+          this.logger.error(`Error fetching media item ${mediaId}:`, mediaError);
+          continue;
+        }
+
+        if (mediaItem?.storage_path) {
+          const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaItem.storage_path}`;
+          galleryItems.push({
+            mentor_talk_id: talkId,
+            media_id: mediaId,
+            type: 'image',
+            url: url,
+            alt_text: `Gallery item ${i + 1}`,
+            display_order: i,
+          });
+        }
+      }
+
+      // If we couldn't build any valid gallery items, don't touch existing gallery
+      if (galleryItems.length === 0) {
+        this.logger.warn(
+          `⚠️ Skipping gallery update for talk ${talkId} because no valid mediaIds were resolved. Existing gallery is preserved.`
+        );
+        return;
+      }
+
+      // Remove existing gallery items and insert the new ones
       await supabaseClient
         .from('mentor_talk_gallery_items')
         .delete()
         .eq('mentor_talk_id', talkId);
 
-      // Add new gallery items
-      if (mediaIds && mediaIds.length > 0) {
-        const galleryItems = [];
+      const { error: galleryError } = await supabaseClient
+        .from('mentor_talk_gallery_items')
+        .insert(galleryItems);
 
-        for (let i = 0; i < mediaIds.length; i++) {
-          const mediaId = mediaIds[i];
-          const { data: mediaItem, error: mediaError } = await supabaseClient
-            .from('media')
-            .select('storage_path, storage_type')
-            .eq('id', mediaId)
-            .single();
-
-          if (mediaError) {
-            this.logger.error(`Error fetching media item ${mediaId}:`, mediaError);
-            continue;
-          }
-
-          if (mediaItem.storage_path) {
-            const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaItem.storage_path}`;
-            galleryItems.push({
-              mentor_talk_id: talkId,
-              media_id: mediaId,
-              type: 'image',
-              url: url,
-              alt_text: `Gallery item ${i + 1}`,
-              display_order: i,
-            });
-          }
-        }
-
-        if (galleryItems.length > 0) {
-          const { error: galleryError } = await supabaseClient
-            .from('mentor_talk_gallery_items')
-            .insert(galleryItems);
-
-          if (galleryError) {
-            this.logger.error('Error inserting gallery items:', galleryError);
-          } else {
-            this.logger.log(`✅ Added ${galleryItems.length} gallery items to talk ${talkId}`);
-          }
-        }
+      if (galleryError) {
+        this.logger.error('Error inserting gallery items:', galleryError);
+      } else {
+        this.logger.log(`✅ Replaced gallery with ${galleryItems.length} item(s) for talk ${talkId}`);
       }
     } catch (error) {
       this.logger.error('Error updating talk gallery:', error);
