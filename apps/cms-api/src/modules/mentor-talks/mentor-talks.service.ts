@@ -58,7 +58,8 @@ export class MentorTalksService {
                 if (!mediaError && mediaRecord && mediaRecord.storage_path) {
                   const supabaseUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaRecord.storage_path}`;
                   processedGallery.push({
-                    id: item.id,
+                    // Use the underlying media id so the frontend can round-trip mediaIds correctly
+                    id: item.media_id,
                     type: item.type,
                     url: supabaseUrl,
                     alt: item.alt_text,
@@ -71,6 +72,7 @@ export class MentorTalksService {
               } else if (item.url && item.url.includes('supabase.co/storage')) {
                 // If it's already a Supabase URL, use it as-is
                 processedGallery.push({
+                  // Fallback: no media_id, so use the gallery item id
                   id: item.id,
                   type: item.type,
                   url: item.url,
@@ -190,7 +192,7 @@ export class MentorTalksService {
                 if (!mediaError && mediaRecord && mediaRecord.storage_path) {
                   const supabaseUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaRecord.storage_path}`;
                   processedGallery.push({
-                    id: item.id,
+                    id: item.media_id,
                     type: item.type,
                     url: supabaseUrl,
                     alt: item.alt_text,

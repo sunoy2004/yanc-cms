@@ -16,6 +16,8 @@ export class EventsController {
 
   @Get('upcoming')
   async getUpcomingEvents() {
+    // Remove from Supabase any upcoming events whose date has passed
+    await this.eventsService.deletePastUpcomingEvents();
     const allEvents = await this.eventsService.getEvents();
     const upcomingEvents = allEvents.filter(event => event.category === 'upcoming' && event.is_active);
     // Sort by event_date ascending (soonest upcoming events first)

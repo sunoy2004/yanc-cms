@@ -68,9 +68,12 @@ export class EventsService {
 
   static async getUpcomingEvents(): Promise<Event[]> {
     try {
-      const events = await this.request<Event[]>('/events/upcoming');
-      console.log('UPCOMING EVENTS DATA:', events);
-      return events;
+      const events = await this.getEvents();
+      const upcoming = events.filter(
+        (event) => (event.category || EventCategory.UPCOMING) === EventCategory.UPCOMING
+      );
+      console.log('UPCOMING EVENTS DATA (CMS view):', upcoming);
+      return upcoming;
     } catch (error) {
       console.error('Error fetching upcoming events:', error);
       throw error;
@@ -79,9 +82,12 @@ export class EventsService {
 
   static async getPastEvents(): Promise<Event[]> {
     try {
-      const events = await this.request<Event[]>('/events/past');
-      console.log('PAST EVENTS DATA:', events);
-      return events;
+      const events = await this.getEvents();
+      const past = events.filter(
+        (event) => (event.category || EventCategory.UPCOMING) === EventCategory.PAST
+      );
+      console.log('PAST EVENTS DATA (CMS view):', past);
+      return past;
     } catch (error) {
       console.error('Error fetching past events:', error);
       throw error;

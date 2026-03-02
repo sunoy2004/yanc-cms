@@ -227,16 +227,16 @@ export default function HeroContentPage() {
       const updatedItem = await apiService.updateHeroContent(item.id, {
         published: !item.isActive,
       });
-      
+      const isActive = updatedItem?.isActive ?? (updatedItem as any)?.is_active ?? !item.isActive;
+      const normalized = updatedItem
+        ? { ...updatedItem, isActive, ctaLink: updatedItem.ctaLink ?? (updatedItem as any).ctaUrl ?? item.ctaLink }
+        : { ...item, isActive };
       setHeroItems((prev) =>
-        prev.map((i) =>
-          i.id === item.id ? { ...updatedItem } : i
-        )
+        prev.map((i) => (i.id === item.id ? normalized : i))
       );
-      
       toast({
-        title: updatedItem.isActive ? 'Content published' : 'Content unpublished',
-        description: `"${item.title}" is now ${updatedItem.isActive ? 'active' : 'inactive'}.`,
+        title: isActive ? 'Content published' : 'Content unpublished',
+        description: `"${item.title}" is now ${isActive ? 'active' : 'inactive'}.`,
       });
     } catch (error) {
       toast({

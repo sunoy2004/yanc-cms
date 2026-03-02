@@ -76,38 +76,41 @@ export default function PastEventsPage() {
   };
 
   const pageConfig = getPageConfig();
-  
   const filteredEvents = events;
+
+  // API may return event_date / is_active (snake_case); support both for display
+  const getEventDate = (item: Event & { event_date?: string }) =>
+    item.eventDate || item.event_date;
+  const getIsPublished = (item: Event & { is_active?: boolean }) =>
+    item.isPublished ?? item.is_active ?? false;
 
   const columns: Column<Event>[] = [
     {
       key: 'title',
       header: 'Event',
       render: (item) => (
-        <div className="flex items-center gap-3">
-          <img
-            src={item.image}
-            alt={item.imageAlt}
-            className="h-12 w-12 rounded-lg object-cover"
-          />
-          <div>
-            <p className="font-medium">{item.title}</p>
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {item.description}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <p className="font-medium text-foreground truncate">{item.title}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+            {item.description || '—'}
+          </p>
         </div>
       ),
     },
     {
       key: 'date',
       header: 'Date',
-      render: (item) => (
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          {item.eventDate ? format(new Date(item.eventDate), 'MMM d, yyyy') : 'No date set'}
-        </div>
-      ),
+      render: (item) => {
+        const dateStr = getEventDate(item as Event & { event_date?: string });
+        const date = dateStr ? (() => { try { return new Date(dateStr); } catch { return null; } })() : null;
+        const formatted = date && !isNaN(date.getTime()) ? format(date, 'MMM d, yyyy') : null;
+        return (
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="text-foreground">{formatted ?? 'No date set'}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'location',
@@ -115,23 +118,28 @@ export default function PastEventsPage() {
       render: (item) => (
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          {item.location}
+          {item.location || '—'}
         </div>
       ),
     },
     {
       key: 'isPublished',
       header: 'Status',
-      render: (item) => (
-        <span
-          className={cn(
-            'cms-badge',
-            item.isPublished ? 'cms-badge-success' : 'cms-badge-muted'
-          )}
-        >
-          {item.isPublished ? 'Published' : 'Draft'}
-        </span>
-      ),
+      render: (item) => {
+        const published = getIsPublished(item as Event & { is_active?: boolean });
+        return (
+          <button
+            type="button"
+            onClick={() => handleTogglePublish(item)}
+            className={cn(
+              'cms-badge cursor-pointer transition-opacity hover:opacity-90',
+              published ? 'cms-badge-success' : 'cms-badge-muted'
+            )}
+          >
+            {published ? 'Published' : 'Draft'}
+          </button>
+        );
+      },
     },
   ];
 
@@ -151,6 +159,19 @@ export default function PastEventsPage() {
     setIsDialogOpen(true);
   };
 
+  // API returns mediaItems; frontend uses gallery. Normalize so MediaUploader gets items with url for previews.
+  const getGalleryForForm = (event: Event & { mediaItems?: Array<{ id: string; url?: string; type?: string; alt?: string; name?: string; order?: number; createdAt?: string }> }) => {
+    const raw = event.gallery?.length ? event.gallery : (event.mediaItems ?? []);
+    return raw.map((m: any) => ({
+      id: m.id,
+      url: m.url || '',
+      type: (m.type === 'video' ? 'video' : 'image') as 'image' | 'video',
+      alt: m.alt ?? m.name ?? '',
+      order: m.order ?? 0,
+      createdAt: m.createdAt || new Date().toISOString(),
+    }));
+  };
+
   const handleEdit = (item: Event) => {
     setEditingItem(item);
     setFormData({
@@ -158,11 +179,11 @@ export default function PastEventsPage() {
       description: item.description,
       speaker: item.speaker || '',
       location: item.location,
-      eventDate: item.eventDate,
+      eventDate: getEventDate(item as Event & { event_date?: string }) || '',
       image: item.image,
       imageAlt: item.imageAlt || '',
-      gallery: item.gallery || [],
-      isPublished: item.isPublished,
+      gallery: getGalleryForForm(item as Event & { mediaItems?: Array<{ id: string; url?: string; type?: string; alt?: string; name?: string; order?: number; createdAt?: string }> }),
+      isPublished: getIsPublished(item as Event & { is_active?: boolean }),
     });
     setIsDialogOpen(true);
   };
@@ -171,7 +192,7 @@ export default function PastEventsPage() {
     if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
       try {
         await EventsService.deleteEvent(item.id);
-        await loadPastEvents(); // Reload past events from server
+        await loadPastEvents();
         toast({
           title: 'Event deleted',
           description: 'The event has been removed.',
@@ -187,13 +208,36 @@ export default function PastEventsPage() {
     }
   };
 
-  const handleTogglePublish = async (item: Event) => {
+  const handleBulkDelete = async (items: Event[]) => {
+    if (items.length === 0) return;
+    if (!confirm(`Delete ${items.length} event(s)? This will remove them from Supabase.`)) return;
     try {
-      await EventsService.togglePublish(item.id, !item.isPublished);
-      await loadPastEvents(); // Reload past events from server
+      for (const item of items) {
+        await EventsService.deleteEvent(item.id);
+      }
+      await loadPastEvents();
       toast({
-        title: item.isPublished ? 'Event unpublished' : 'Event published',
-        description: `"${item.title}" is now ${item.isPublished ? 'hidden' : 'visible'}.`,
+        title: 'Events deleted',
+        description: `${items.length} event(s) have been removed.`,
+      });
+    } catch (error) {
+      console.error('Error bulk deleting events:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete some events. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTogglePublish = async (item: Event) => {
+    const published = getIsPublished(item as Event & { is_active?: boolean });
+    try {
+      await EventsService.togglePublish(item.id, !published);
+      await loadPastEvents();
+      toast({
+        title: published ? 'Event unpublished' : 'Event published',
+        description: `"${item.title}" is now ${published ? 'hidden' : 'visible'}.`,
       });
     } catch (error) {
       console.error('Error toggling publish status:', error);
@@ -276,8 +320,9 @@ export default function PastEventsPage() {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onBulkDelete={handleBulkDelete}
         onTogglePublish={handleTogglePublish}
-        isPublished={(item) => item.isPublished}
+        isPublished={(item) => getIsPublished(item as Event & { is_active?: boolean })}
         searchPlaceholder="Search past events..."
         emptyMessage="No past events found."
       />

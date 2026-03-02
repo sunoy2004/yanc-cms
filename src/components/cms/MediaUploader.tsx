@@ -120,25 +120,21 @@ export function MediaUploader({
     onChange(value.filter((item) => item.id !== id));
   };
 
-  // Guardrail: Check if URL is valid for rendering
-  const isValidImageUrl = (url: string): boolean => {
-    if (!url) return false;
-    
-    // Check for invalid URL patterns (old Google Drive format)
-    if (url.includes('/file/d/') && url.includes('/view')) {
-      console.warn('⚠️ Invalid Google Drive URL detected:', url);
-      return false;
-    }
-    
-    // Check for valid URL format
+  // Resolve URL for image preview (accept full http(s) URLs or relative paths)
+  const getPreviewUrl = (url: string): string | null => {
+    if (!url || typeof url !== 'string' || !url.trim()) return null;
+    if (url.includes('/file/d/') && url.includes('/view')) return null; // Old Google Drive viewer
     try {
-      new URL(url);
-      // Accept both Supabase Storage URLs and valid Google Drive URLs
-      return url.includes('supabase.co/storage') || url.startsWith('https://drive.google.com/uc?id=');
+      const trimmed = url.trim();
+      const parsed = new URL(trimmed, typeof window !== 'undefined' ? window.location.origin : 'https://example.com');
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+      return null;
     } catch {
-      return false;
+      return null;
     }
   };
+
+  const isValidImageUrl = (url: string): boolean => getPreviewUrl(url) !== null;
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -184,9 +180,9 @@ export function MediaUploader({
               key={item.id}
               className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
             >
-              {item.type === 'image' && isValidImageUrl(item.url) ? (
+              {item.type === 'image' && getPreviewUrl(item.url) ? (
                 <img
-                  src={item.url}
+                  src={getPreviewUrl(item.url)!}
                   alt={item.alt || ''}
                   className="h-full w-full object-cover"
                 />

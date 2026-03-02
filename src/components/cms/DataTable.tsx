@@ -41,6 +41,8 @@ interface DataTableProps<T extends { id: string }> {
   columns: Column<T>[];
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  /** Called when user clicks the bulk Delete button (with rows selected). Receives selected items. */
+  onBulkDelete?: (items: T[]) => void | Promise<void>;
   onTogglePublish?: (item: T) => void;
   isPublished?: (item: T) => boolean;
   searchPlaceholder?: string;
@@ -52,6 +54,7 @@ export function DataTable<T extends { id: string }>({
   columns,
   onEdit,
   onDelete,
+  onBulkDelete,
   onTogglePublish,
   isPublished,
   searchPlaceholder = 'Search...',
@@ -60,6 +63,7 @@ export function DataTable<T extends { id: string }>({
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const pageSize = 10;
 
   // Defensive check to ensure data is an array
@@ -116,9 +120,25 @@ export function DataTable<T extends { id: string }>({
             <span className="text-sm text-muted-foreground">
               {selectedIds.size} selected
             </span>
-            <Button variant="destructive" size="sm">
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={!onBulkDelete || bulkDeleting}
+              onClick={async () => {
+                if (!onBulkDelete) return;
+                const selectedItems = filteredData.filter((item) => selectedIds.has(item.id));
+                if (selectedItems.length === 0) return;
+                setBulkDeleting(true);
+                try {
+                  await onBulkDelete(selectedItems);
+                  setSelectedIds(new Set());
+                } finally {
+                  setBulkDeleting(false);
+                }
+              }}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              {bulkDeleting ? 'Deleting...' : 'Delete'}
             </Button>
           </div>
         )}
@@ -157,12 +177,12 @@ export function DataTable<T extends { id: string }>({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((item) => (
-                <TableRow key={item.id} className="group">
+              paginatedData.map((item, index) => (
+                <TableRow key={item?.id ?? `row-${index}`} className="group">
                   <TableCell>
                     <Checkbox
-                      checked={selectedIds.has(item.id)}
-                      onCheckedChange={() => toggleSelect(item.id)}
+                      checked={selectedIds.has(String(item?.id ?? ''))}
+                      onCheckedChange={() => toggleSelect(String(item?.id ?? ''))}
                     />
                   </TableCell>
                   {columns.map((column) => (

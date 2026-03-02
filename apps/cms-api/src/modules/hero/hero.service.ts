@@ -336,12 +336,63 @@ export class HeroService {
         }
       }
 
-      // Fetch and return the updated hero content with media
-      return await this.getHeroContent();
+      // Return the updated hero in frontend shape (including when inactive)
+      return await this.buildHeroResponse(supabaseClient, updatedHero);
     } catch (error) {
       this.logger.error('Error in updateHeroContent:', error);
       throw error;
     }
+  }
+
+  /** Build hero response with media and camelCase for frontend (used after update so inactive hero is returned). */
+  private async buildHeroResponse(supabaseClient: any, data: any): Promise<any> {
+    if (!data) return null;
+    const mediaItems: any[] = [];
+    const { data: heroMediaItems } = await supabaseClient
+      .from('hero_media_item')
+      .select('id, type, url, alt_text, order, created_at, media_id')
+      .eq('hero_id', data.id)
+      .order('order');
+    if (heroMediaItems) {
+      for (const item of heroMediaItems) {
+        if (item.media_id) {
+          const { data: mediaRecord } = await supabaseClient
+            .from('media')
+            .select('storage_path')
+            .eq('id', item.media_id)
+            .single();
+          if (mediaRecord?.storage_path) {
+            const url = `${process.env.SUPABASE_URL}/storage/v1/object/public/media/${mediaRecord.storage_path}`;
+            mediaItems.push({
+              id: item.id,
+              type: item.type === 'image' ? 'image' : 'video',
+              url,
+              alt: item.alt_text,
+              order: item.order,
+              createdAt: item.created_at || data.created_at,
+            });
+          }
+        } else if (item.url?.includes('supabase.co/storage')) {
+          mediaItems.push({
+            id: item.id,
+            type: item.type === 'image' ? 'image' : 'video',
+            url: item.url,
+            alt: item.alt_text,
+            order: item.order,
+            createdAt: item.created_at || data.created_at,
+          });
+        }
+      }
+    }
+    const { cta_text, cta_url, is_active, ...rest } = data;
+    return {
+      ...rest,
+      ctaText: data.cta_text ?? '',
+      ctaUrl: data.cta_url ?? '',
+      ctaLink: data.cta_url ?? '',
+      mediaItems,
+      isActive: data.is_active ?? true,
+    };
   }
 
   async deleteHeroContent(id: string) {

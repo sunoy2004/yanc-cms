@@ -90,11 +90,11 @@ export class EventsService {
         })
       );
 
-      // Add computed fields for frontend
+      // Add computed fields for frontend (include isPublished for CMS UI)
       const processedEvents = eventsWithMedia.map(event => ({
         ...event,
-        // Fallback to 'upcoming' if category is undefined
         category: event.category || 'upcoming',
+        isPublished: event.is_active ?? true,
         isPast: new Date(event.event_date) < new Date(),
         isUpcoming: new Date(event.event_date) >= new Date(),
         year: new Date(event.event_date).getFullYear(),
@@ -369,6 +369,35 @@ export class EventsService {
     } catch (error) {
       this.logger.error('Error in deleteEvent:', error);
       throw error;
+    }
+  }
+
+  /** Delete upcoming events whose event_date has passed. Called when fetching upcoming list. */
+  async deletePastUpcomingEvents(): Promise<number> {
+    try {
+      const supabaseClient = this.supabase.getClient();
+      if (!supabaseClient) return 0;
+
+      const now = new Date().toISOString();
+      const { data, error } = await supabaseClient
+        .from('event_content')
+        .delete()
+        .eq('category', 'upcoming')
+        .lt('event_date', now)
+        .select('id');
+
+      if (error) {
+        this.logger.warn('Error deleting past upcoming events', error);
+        return 0;
+      }
+      const count = Array.isArray(data) ? data.length : 0;
+      if (count > 0) {
+        this.logger.log(`✅ Deleted ${count} past upcoming event(s) from Supabase`);
+      }
+      return count;
+    } catch (err) {
+      this.logger.warn('deletePastUpcomingEvents failed', err);
+      return 0;
     }
   }
 }

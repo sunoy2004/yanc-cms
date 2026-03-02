@@ -69,23 +69,9 @@ export default function MentorTalksPage() {
       key: 'title',
       header: 'Talk',
       render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="relative h-16 w-24 overflow-hidden rounded-lg bg-muted">
-            <img
-              src={item.thumbnail}
-              alt={item.title}
-              className="h-full w-full object-cover"
-            />
-            {item.videoUrl && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <Play className="h-6 w-6 text-white" />
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="font-medium">{item.title}</p>
-            <p className="text-sm text-muted-foreground">{item.speaker}</p>
-          </div>
+        <div>
+          <p className="font-medium">{item.title}</p>
+          <p className="text-sm text-muted-foreground">{item.speaker}</p>
         </div>
       ),
     },

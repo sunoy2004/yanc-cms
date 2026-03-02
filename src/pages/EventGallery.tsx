@@ -17,6 +17,7 @@ import {
 import { Plus, Image, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import type { MediaItem } from '@/types/cms';
 import { EventGalleryItemsService } from '@/services/event-gallery-items.service';
 
 // Initial empty state
@@ -56,7 +57,7 @@ export default function EventGalleryPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    mediaIds: [] as string[], // Changed to array to support multiple media
+    gallery: [] as MediaItem[],
     isPublished: true,
     displayOrder: 0,
   });
@@ -70,54 +71,70 @@ export default function EventGalleryPage() {
   };
 
   const pageConfig = getPageConfig();
-  
   const filteredEvents = galleryItems;
+
+  const getIsActive = (item: any) => item?.isActive ?? item?.is_active ?? false;
+
+  // Normalize API media array to MediaItem[] for MediaUploader (same pattern as Past Events)
+  const getGalleryForForm = (item: any): MediaItem[] => {
+    const media = item?.media;
+    if (!media) return [];
+    const arr = Array.isArray(media) ? media : [media];
+    return arr.map((m: any, index: number) => ({
+      id: m.id,
+      url: m.url || '',
+      type: (m.type === 'video' ? 'video' : 'image') as 'image' | 'video',
+      alt: m.alt ?? m.name ?? '',
+      order: index,
+      createdAt: m.createdAt || new Date().toISOString(),
+    }));
+  };
 
   const columns: Column<any>[] = [
     {
       key: 'title',
       header: 'Gallery Item',
       render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <img
-              src={item.media?.url}
-              alt={item.media?.alt || item.title || 'Gallery item'}
-              className="h-12 w-12 rounded-lg object-cover"
-            />
-          </div>
-          <div>
-            <p className="font-medium">{item.title || 'Untitled'}</p>
-            <p className="text-sm text-muted-foreground line-clamp-1">
-              {item.description || 'No description'}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <p className="font-medium text-foreground truncate">{item.title || 'Untitled'}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+            {item.description || '—'}
+          </p>
         </div>
       ),
     },
     {
       key: 'media',
       header: 'Media',
-      render: (item) => (
-        <div className="flex items-center gap-2">
-          <Image className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm capitalize">{item.media?.type || 'image'}</span>
-        </div>
-      ),
+      render: (item) => {
+        const media = item.media;
+        const type = Array.isArray(media) ? (media[0]?.type ?? 'image') : (media?.type ?? 'image');
+        return (
+          <div className="flex items-center gap-2">
+            <Image className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="text-sm capitalize">{type}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'isActive',
       header: 'Status',
-      render: (item) => (
-        <span
-          className={cn(
-            'cms-badge',
-            item.isActive ? 'cms-badge-success' : 'cms-badge-muted'
-          )}
-        >
-          {item.isActive ? 'Published' : 'Draft'}
-        </span>
-      ),
+      render: (item) => {
+        const active = getIsActive(item);
+        return (
+          <button
+            type="button"
+            onClick={() => handleTogglePublish(item)}
+            className={cn(
+              'cms-badge cursor-pointer transition-opacity hover:opacity-90',
+              active ? 'cms-badge-success' : 'cms-badge-muted'
+            )}
+          >
+            {active ? 'Published' : 'Draft'}
+          </button>
+        );
+      },
     },
   ];
 
@@ -126,7 +143,7 @@ export default function EventGalleryPage() {
     setFormData({
       title: '',
       description: '',
-      mediaIds: [],
+      gallery: [],
       isPublished: true,
       displayOrder: galleryItems.length + 1,
     });
@@ -138,9 +155,9 @@ export default function EventGalleryPage() {
     setFormData({
       title: item.title || '',
       description: item.description || '',
-      mediaIds: item.media?.map((m: any) => m.id) || [], // Extract media IDs from array
-      isPublished: item.isActive !== false,
-      displayOrder: item.displayOrder || 0,
+      gallery: getGalleryForForm(item),
+      isPublished: getIsActive(item),
+      displayOrder: item.displayOrder ?? 0,
     });
     setIsDialogOpen(true);
   };
@@ -149,7 +166,7 @@ export default function EventGalleryPage() {
     if (confirm(`Are you sure you want to delete this gallery item?`)) {
       try {
         await EventGalleryItemsService.deleteEventGalleryItem(item.id);
-        await loadGalleryItems(); // Reload gallery items from server
+        await loadGalleryItems();
         toast({
           title: 'Item deleted',
           description: 'The gallery item has been removed.',
@@ -165,13 +182,36 @@ export default function EventGalleryPage() {
     }
   };
 
-  const handleTogglePublish = async (item: any) => {
+  const handleBulkDelete = async (items: any[]) => {
+    if (items.length === 0) return;
+    if (!confirm(`Delete ${items.length} gallery item(s)?`)) return;
     try {
-      await EventGalleryItemsService.togglePublish(item.id, !item.isActive);
-      await loadGalleryItems(); // Reload gallery items from server
+      for (const item of items) {
+        await EventGalleryItemsService.deleteEventGalleryItem(item.id);
+      }
+      await loadGalleryItems();
       toast({
-        title: item.isActive ? 'Item unpublished' : 'Item published',
-        description: `Gallery item is now ${item.isActive ? 'hidden' : 'visible'}.`,
+        title: 'Items deleted',
+        description: `${items.length} gallery item(s) have been removed.`,
+      });
+    } catch (error) {
+      console.error('Error bulk deleting gallery items:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete some items. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTogglePublish = async (item: any) => {
+    const active = getIsActive(item);
+    try {
+      await EventGalleryItemsService.togglePublish(item.id, !active);
+      await loadGalleryItems();
+      toast({
+        title: active ? 'Item unpublished' : 'Item published',
+        description: `Gallery item is now ${active ? 'hidden' : 'visible'}.`,
       });
     } catch (error) {
       console.error('Error toggling publish status:', error);
@@ -192,7 +232,7 @@ export default function EventGalleryPage() {
       const galleryItemData = {
         title: formData.title || undefined,
         description: formData.description || undefined,
-        mediaIds: formData.mediaIds.length > 0 ? formData.mediaIds : undefined,
+        mediaIds: formData.gallery.length > 0 ? formData.gallery.map((item) => item.id).filter(Boolean) : undefined,
         isActive: formData.isPublished,
         displayOrder: formData.displayOrder,
       };
@@ -251,8 +291,9 @@ export default function EventGalleryPage() {
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onBulkDelete={handleBulkDelete}
         onTogglePublish={handleTogglePublish}
-        isPublished={(item) => item.isActive}
+        isPublished={(item) => getIsActive(item)}
         searchPlaceholder="Search gallery items..."
         emptyMessage="No gallery items found."
       />
@@ -298,19 +339,10 @@ export default function EventGalleryPage() {
               <div className="space-y-2">
                 <Label>Media Files</Label>
                 <MediaUploader
-                  value={formData.mediaIds.map(id => ({ 
-                    id, 
-                    url: '', 
-                    type: 'image', 
-                    alt: '', 
-                    order: 0, 
-                    createdAt: new Date().toISOString() 
-                  })) || []}
-                  onChange={(items) => {
-                    // Handle multiple files - store as array of IDs
-                    const mediaIds = items.map(item => item.id);
-                    setFormData((prev) => ({ ...prev, mediaIds }));
-                  }}
+                  value={formData.gallery}
+                  onChange={(items) =>
+                    setFormData((prev) => ({ ...prev, gallery: items }))
+                  }
                   maxFiles={10}
                 />
                 <p className="text-sm text-muted-foreground">
