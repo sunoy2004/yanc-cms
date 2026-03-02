@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
-import { CreateTeamMemberDto } from '../../dtos/team.dto';
-import { UpdateTeamMemberDto } from '../../dtos/team-update.dto';
+import { CreateTeamMemberDto, UpdateTeamMemberDto } from '../../dtos/team.dto';
 
 @Injectable()
 export class TeamService {
