@@ -9,7 +9,7 @@ export class EventGalleryItemsService {
 
   constructor(private readonly supabase: SupabaseService) {}
 
-  async getEventGalleryItems() {
+  async getEventGalleryItems(onlyActive = true) {
     try {
       this.logger.log('Retrieving all event gallery items');
       
@@ -19,7 +19,7 @@ export class EventGalleryItemsService {
       }
 
       // Get gallery items with their media information using junction table
-      const { data: galleryItems, error: itemsError } = await supabaseClient
+      let query = supabaseClient
         .from('event_gallery_items')
         .select(`
           *,
@@ -27,8 +27,13 @@ export class EventGalleryItemsService {
             media (*)
           )
         `)
-        .eq('is_active', true)
         .order('display_order', { ascending: true });
+
+      if (onlyActive) {
+        query = query.eq('is_active', true);
+      }
+
+      const { data: galleryItems, error: itemsError } = await query;
 
       if (itemsError) {
         this.logger.error('Error retrieving event gallery items:', itemsError);

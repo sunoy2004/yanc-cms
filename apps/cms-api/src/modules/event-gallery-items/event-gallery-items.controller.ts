@@ -12,7 +12,15 @@ export class EventGalleryItemsController {
   @Get('public')
   @Public()
   async getPublicEventGalleryItems() {
-    return this.eventGalleryItemsService.getEventGalleryItems();
+    // Public website: only show active items
+    return this.eventGalleryItemsService.getEventGalleryItems(true);
+  }
+
+  // Admin/CMS view: list all gallery items, including drafts
+  @Get()
+  @Public()
+  async getAdminEventGalleryItems() {
+    return this.eventGalleryItemsService.getEventGalleryItems(false);
   }
 
   @Post()

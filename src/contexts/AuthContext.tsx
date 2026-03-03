@@ -23,7 +23,9 @@ const resolveApiBase = () => {
   return 'http://localhost:8080';
 };
 
-async function fetchProfile(token: string): Promise<User | null> {
+type ProfileResult = { user: User | null; unauthorized: boolean };
+
+async function fetchProfile(token: string): Promise<ProfileResult> {
   const apiBase = resolveApiBase();
   const meUrl = apiBase.endsWith('/api') ? `${apiBase}/auth/me` : `${apiBase}/api/auth/me`;
   try {
@@ -32,8 +34,12 @@ async function fetchProfile(token: string): Promise<User | null> {
         Authorization: `Bearer ${token}`,
       },
     });
+    if (res.status === 401 || res.status === 403) {
+      // Token is invalid/expired – treat as unauthorized so we can force logout
+      return { user: null, unauthorized: true };
+    }
     if (!res.ok) {
-      return null;
+      return { user: null, unauthorized: false };
     }
     const data = await res.json();
     const user: User = {
@@ -42,9 +48,10 @@ async function fetchProfile(token: string): Promise<User | null> {
       name: data.name || data.username || 'Admin User',
       role: (data.role === 'editor' ? 'editor' : 'admin'),
     };
-    return user;
+    return { user, unauthorized: false };
   } catch {
-    return null;
+    // Network or other error – not necessarily auth-related
+    return { user: null, unauthorized: false };
   }
 }
 
@@ -68,7 +75,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       setState(prev => ({ ...prev, isLoading: true }));
-      const backendUser = await fetchProfile(token);
+      const { user: backendUser, unauthorized } = await fetchProfile(token);
+
+      if (unauthorized) {
+        // Token is no longer valid – clear session and force re-login
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        setState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+        return;
+      }
+
       if (backendUser) {
         localStorage.setItem(USER_KEY, JSON.stringify(backendUser));
         setState({
@@ -80,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Fallback to cached user if profile fetch fails
+      // Fallback to cached user only if profile fetch failed for non-auth reasons
       if (userStr) {
         try {
           const user = JSON.parse(userStr) as User;
@@ -143,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem(TOKEN_KEY, token);
 
       // Try to get profile from backend to populate name/email
-      const backendUser = await fetchProfile(token);
+      const { user: backendUser } = await fetchProfile(token);
       const user: User =
         backendUser ?? {
           id: '1',

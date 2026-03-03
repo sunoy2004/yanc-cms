@@ -54,7 +54,9 @@ export class EventGalleryItemsService {
 
   static async getEventGalleryItems(): Promise<EventGalleryItem[]> {
     try {
-      const items = await this.request<EventGalleryItem[]>('/event-gallery-items/public');
+      // CMS should see both published and draft items.
+      // Use admin endpoint (no is_active filter); public site uses /public.
+      const items = await this.request<EventGalleryItem[]>('/event-gallery-items');
       console.log('EVENT GALLERY DATA:', items);
       return items;
     } catch (error) {
