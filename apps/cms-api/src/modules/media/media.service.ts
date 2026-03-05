@@ -3,6 +3,9 @@ import { SupabaseService } from '../../supabase/supabase.service';
 import { createClient } from '@supabase/supabase-js';
 import { convertToWebp } from '../../utils/imageProcessor';
 
+// Toggle image optimization (WebP conversion). Disabled by default for now.
+const ENABLE_IMAGE_OPTIMIZATION = false;
+
 @Injectable()
 export class MediaService {
   private readonly logger = new Logger(MediaService.name);
@@ -92,7 +95,7 @@ export class MediaService {
       let storedFileName = originalName;
       let storedMimeType = mimeType;
 
-      if (isImage) {
+      if (ENABLE_IMAGE_OPTIMIZATION && isImage) {
         this.logger.log(`Optimizing image before upload (WebP conversion): ${originalName}`);
         finalBuffer = await convertToWebp(fileBuffer);
 
