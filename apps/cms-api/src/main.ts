@@ -67,6 +67,7 @@ async function bootstrap() {
     // CORS configuration - allow specific trusted origins and any localhost/127.0.0.1 (any port)
     const allowedOrigins = [
       'https://website-1095720168864.asia-south1.run.app',
+      'https://yanc-website-1095720168864.asia-south1.run.app',
       'https://ynac-cms-bk-1095720168864.asia-south1.run.app',
       'https://yanc-cms-1095720168864.asia-south1.run.app',
       'http://localhost:3000',
