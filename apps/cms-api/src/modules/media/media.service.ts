@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { createClient } from '@supabase/supabase-js';
+import { convertToWebp } from '../../utils/imageProcessor';
 
 @Injectable()
 export class MediaService {
@@ -83,16 +84,33 @@ export class MediaService {
   async uploadFileToDrive(fileBuffer: Buffer, originalName: string, folderPath: string = 'uploads') {
     try {
       this.logger.log(`🚀 Starting file upload to Supabase: ${originalName} to folder: ${folderPath}`);
-      
-      // Upload to Supabase Storage only (no Google Drive fallback)
-      const supabaseStoragePath = await this.uploadToSupabaseStorage(fileBuffer, originalName, folderPath);
+
+      const mimeType = this.getMimeType(originalName);
+      const isImage = mimeType.startsWith('image/');
+
+      let finalBuffer = fileBuffer;
+      let storedFileName = originalName;
+      let storedMimeType = mimeType;
+
+      if (isImage) {
+        this.logger.log(`Optimizing image before upload (WebP conversion): ${originalName}`);
+        finalBuffer = await convertToWebp(fileBuffer);
+
+        const dotIndex = originalName.lastIndexOf('.');
+        const baseName = dotIndex !== -1 ? originalName.slice(0, dotIndex) : originalName;
+        storedFileName = `${baseName}.webp`;
+        storedMimeType = 'image/webp';
+      }
+
+      // Upload to Supabase Storage only (no Google Drive fallback), using optimized buffer/name for images
+      const supabaseStoragePath = await this.uploadToSupabaseStorage(finalBuffer, storedFileName, folderPath);
       this.logger.log(`✅ File uploaded to Supabase Storage: ${supabaseStoragePath}`);
 
       // Create media record in database with Supabase-only logic
       const mediaItem = await this.createMedia({
         name: originalName,
         driveId: '', // No Google Drive integration
-        mimeType: this.getMimeType(originalName),
+        mimeType: storedMimeType,
         storageType: 'supabase_storage',  // Only Supabase storage
         storagePath: supabaseStoragePath, // URL comes from Supabase
       });
@@ -135,6 +153,7 @@ export class MediaService {
         .from(bucketName)
         .upload(filePath, fileBuffer, {
           contentType: this.getMimeType(fileName),
+          cacheControl: '31536000',
           upsert: true,
         });
 
