@@ -156,7 +156,7 @@ export class MediaService {
         .from(bucketName)
         .upload(filePath, fileBuffer, {
           contentType: this.getMimeType(fileName),
-          cacheControl: '31536000', // 1 year
+          cacheControl: '3600', // 1 hour
           upsert: true,
         });
 
