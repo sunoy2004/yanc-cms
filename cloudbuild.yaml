@@ -1,3 +1,6 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
   # Build the frontend Docker image using the root Dockerfile
   - name: 'gcr.io/cloud-builders/docker'
