@@ -1,1 +1,11 @@
 node_modules
+
+# Environment and secrets (never commit)
+.env
+.env.*
+!.env.example
+!.env*.example
+apps/cms-api/.env
+apps/cms-api/.env.*
+!apps/cms-api/.env.example
+!apps/cms-api/.env*.example
