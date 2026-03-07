@@ -13,7 +13,6 @@ export declare class MentorTalksService {
         date: any;
         description: any;
         content: any;
-        videoUrl: any;
         thumbnail: any;
         gallery: any[];
         isPublished: any;

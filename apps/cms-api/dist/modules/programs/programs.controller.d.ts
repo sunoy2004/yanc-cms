@@ -4,6 +4,7 @@ import { UpdateProgramDto } from '../../dtos/program-update.dto';
 export declare class ProgramsController {
     private readonly programsService;
     constructor(programsService: ProgramsService);
+    getAdminPrograms(): Promise<any[]>;
     getPublicPrograms(): Promise<any[]>;
     createProgram(createProgramDto: CreateProgramDto): Promise<any[]>;
     updateProgram(id: string, updateProgramDto: UpdateProgramDto): Promise<any[]>;

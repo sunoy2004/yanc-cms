@@ -14,6 +14,8 @@ exports.MediaService = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_service_1 = require("../../supabase/supabase.service");
 const supabase_js_1 = require("@supabase/supabase-js");
+const imageProcessor_1 = require("../../utils/imageProcessor");
+const ENABLE_IMAGE_OPTIMIZATION = false;
 let MediaService = MediaService_1 = class MediaService {
     constructor(supabase) {
         this.supabase = supabase;
@@ -79,12 +81,25 @@ let MediaService = MediaService_1 = class MediaService {
     async uploadFileToDrive(fileBuffer, originalName, folderPath = 'uploads') {
         try {
             this.logger.log(`🚀 Starting file upload to Supabase: ${originalName} to folder: ${folderPath}`);
-            const supabaseStoragePath = await this.uploadToSupabaseStorage(fileBuffer, originalName, folderPath);
+            const mimeType = this.getMimeType(originalName);
+            const isImage = mimeType.startsWith('image/');
+            let finalBuffer = fileBuffer;
+            let storedFileName = originalName;
+            let storedMimeType = mimeType;
+            if (ENABLE_IMAGE_OPTIMIZATION && isImage) {
+                this.logger.log(`Optimizing image before upload (WebP conversion): ${originalName}`);
+                finalBuffer = await (0, imageProcessor_1.convertToWebp)(fileBuffer);
+                const dotIndex = originalName.lastIndexOf('.');
+                const baseName = dotIndex !== -1 ? originalName.slice(0, dotIndex) : originalName;
+                storedFileName = `${baseName}.webp`;
+                storedMimeType = 'image/webp';
+            }
+            const supabaseStoragePath = await this.uploadToSupabaseStorage(finalBuffer, storedFileName, folderPath);
             this.logger.log(`✅ File uploaded to Supabase Storage: ${supabaseStoragePath}`);
             const mediaItem = await this.createMedia({
                 name: originalName,
                 driveId: '',
-                mimeType: this.getMimeType(originalName),
+                mimeType: storedMimeType,
                 storageType: 'supabase_storage',
                 storagePath: supabaseStoragePath,
             });
@@ -119,6 +134,7 @@ let MediaService = MediaService_1 = class MediaService {
                 .from(bucketName)
                 .upload(filePath, fileBuffer, {
                 contentType: this.getMimeType(fileName),
+                cacheControl: '3600',
                 upsert: true,
             });
             if (error) {

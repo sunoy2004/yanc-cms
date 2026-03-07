@@ -247,6 +247,13 @@ class ApiService {
       body: JSON.stringify({ published }),
     });
   }
+
+  // Deployment / Build API
+  async triggerWebsiteBuild(): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/deploy/website', {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiService = new ApiService();

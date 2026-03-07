@@ -16,7 +16,6 @@ exports.TeamController = void 0;
 const common_1 = require("@nestjs/common");
 const team_service_1 = require("./team.service");
 const team_dto_1 = require("../../dtos/team.dto");
-const team_update_dto_1 = require("../../dtos/team-update.dto");
 const public_decorator_1 = require("../auth/decorators/public.decorator");
 let TeamController = class TeamController {
     constructor(teamService) {
@@ -31,6 +30,9 @@ let TeamController = class TeamController {
     async createTeamMember(createTeamMemberDto) {
         return this.teamService.createTeamMember(createTeamMemberDto);
     }
+    async updateTeamMemberPut(id, updateTeamMemberDto) {
+        return this.teamService.updateTeamMember(id, updateTeamMemberDto);
+    }
     async updateTeamMember(id, updateTeamMemberDto) {
         return this.teamService.updateTeamMember(id, updateTeamMemberDto);
     }
@@ -40,6 +42,9 @@ let TeamController = class TeamController {
     async togglePublish(id, published) {
         const updateDto = { published };
         return this.teamService.updateTeamMember(id, updateDto);
+    }
+    async getAdminTeamMembers(section) {
+        return this.teamService.getTeamMembersAdmin(section);
     }
 };
 exports.TeamController = TeamController;
@@ -71,7 +76,16 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, team_update_dto_1.UpdateTeamMemberDto]),
+    __metadata("design:paramtypes", [String, team_dto_1.UpdateTeamMemberDto]),
+    __metadata("design:returntype", Promise)
+], TeamController.prototype, "updateTeamMemberPut", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Patch)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, team_dto_1.UpdateTeamMemberDto]),
     __metadata("design:returntype", Promise)
 ], TeamController.prototype, "updateTeamMember", null);
 __decorate([
@@ -91,6 +105,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean]),
     __metadata("design:returntype", Promise)
 ], TeamController.prototype, "togglePublish", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('section')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TeamController.prototype, "getAdminTeamMembers", null);
 exports.TeamController = TeamController = __decorate([
     (0, common_1.Controller)('team'),
     __metadata("design:paramtypes", [team_service_1.TeamService])

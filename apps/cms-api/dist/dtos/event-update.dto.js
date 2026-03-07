@@ -40,6 +40,11 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateEventDto.prototype, "eventDate", void 0);
 __decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateEventDto.prototype, "registrationUrl", void 0);
+__decorate([
     (0, class_validator_1.IsIn)(['upcoming', 'past']),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)

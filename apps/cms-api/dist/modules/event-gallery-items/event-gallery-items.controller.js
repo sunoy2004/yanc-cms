@@ -23,7 +23,10 @@ let EventGalleryItemsController = class EventGalleryItemsController {
         this.eventGalleryItemsService = eventGalleryItemsService;
     }
     async getPublicEventGalleryItems() {
-        return this.eventGalleryItemsService.getEventGalleryItems();
+        return this.eventGalleryItemsService.getEventGalleryItems(true);
+    }
+    async getAdminEventGalleryItems() {
+        return this.eventGalleryItemsService.getEventGalleryItems(false);
     }
     async createEventGalleryItem(createDto) {
         return this.eventGalleryItemsService.createEventGalleryItem(createDto);
@@ -46,6 +49,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], EventGalleryItemsController.prototype, "getPublicEventGalleryItems", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, public_decorator_1.Public)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], EventGalleryItemsController.prototype, "getAdminEventGalleryItems", null);
 __decorate([
     (0, common_1.Post)(),
     (0, public_decorator_1.Public)(),

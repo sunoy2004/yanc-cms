@@ -14,6 +14,16 @@ export declare class EventGalleryItemsController {
         createdAt: any;
         updatedAt: any;
     }[]>;
+    getAdminEventGalleryItems(): Promise<{
+        id: any;
+        title: any;
+        description: any;
+        media: any;
+        isActive: any;
+        displayOrder: any;
+        createdAt: any;
+        updatedAt: any;
+    }[]>;
     createEventGalleryItem(createDto: CreateEventGalleryItemDto): Promise<{
         id: any;
         title: any;

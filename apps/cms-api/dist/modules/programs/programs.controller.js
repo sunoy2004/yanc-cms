@@ -22,6 +22,9 @@ let ProgramsController = class ProgramsController {
     constructor(programsService) {
         this.programsService = programsService;
     }
+    async getAdminPrograms() {
+        return this.programsService.getPrograms();
+    }
     async getPublicPrograms() {
         return this.programsService.getPrograms();
     }
@@ -40,6 +43,13 @@ let ProgramsController = class ProgramsController {
     }
 };
 exports.ProgramsController = ProgramsController;
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ProgramsController.prototype, "getAdminPrograms", null);
 __decorate([
     (0, common_1.Get)('public'),
     __metadata("design:type", Function),

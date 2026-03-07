@@ -5,7 +5,6 @@ export declare class UpdateMentorTalkDto {
     talkDate?: string;
     description?: string;
     content?: string;
-    videoUrl?: string;
     thumbnailUrl?: string;
     published?: boolean;
     mediaIds?: string[];

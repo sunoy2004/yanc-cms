@@ -26,6 +26,7 @@ let EventsController = class EventsController {
         return this.eventsService.getEvents();
     }
     async getUpcomingEvents() {
+        await this.eventsService.deletePastUpcomingEvents();
         const allEvents = await this.eventsService.getEvents();
         const upcomingEvents = allEvents.filter(event => event.category === 'upcoming' && event.is_active);
         return upcomingEvents.sort((a, b) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime());

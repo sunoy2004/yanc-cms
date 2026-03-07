@@ -12,7 +12,6 @@ export declare class MentorTalksController {
         date: any;
         description: any;
         content: any;
-        videoUrl: any;
         thumbnail: any;
         gallery: any[];
         isPublished: any;

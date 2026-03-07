@@ -5,7 +5,7 @@ export declare class EventGalleryItemsService {
     private readonly supabase;
     private readonly logger;
     constructor(supabase: SupabaseService);
-    getEventGalleryItems(): Promise<{
+    getEventGalleryItems(onlyActive?: boolean): Promise<{
         id: any;
         title: any;
         description: any;

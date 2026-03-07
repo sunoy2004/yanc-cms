@@ -18,14 +18,14 @@ let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryIt
         this.supabase = supabase;
         this.logger = new common_1.Logger(EventGalleryItemsService_1.name);
     }
-    async getEventGalleryItems() {
+    async getEventGalleryItems(onlyActive = true) {
         try {
             this.logger.log('Retrieving all event gallery items');
             const supabaseClient = this.supabase.getClient();
             if (!supabaseClient) {
                 throw new Error('Supabase client not available');
             }
-            const { data: galleryItems, error: itemsError } = await supabaseClient
+            let query = supabaseClient
                 .from('event_gallery_items')
                 .select(`
           *,
@@ -33,8 +33,11 @@ let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryIt
             media (*)
           )
         `)
-                .eq('is_active', true)
                 .order('display_order', { ascending: true });
+            if (onlyActive) {
+                query = query.eq('is_active', true);
+            }
+            const { data: galleryItems, error: itemsError } = await query;
             if (itemsError) {
                 this.logger.error('Error retrieving event gallery items:', itemsError);
                 throw itemsError;

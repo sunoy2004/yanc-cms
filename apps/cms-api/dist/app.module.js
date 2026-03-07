@@ -22,8 +22,11 @@ const founders_module_1 = require("./modules/founders/founders.module");
 const testimonials_module_1 = require("./modules/testimonials/testimonials.module");
 const about_module_1 = require("./modules/about/about.module");
 const auth_module_1 = require("./modules/auth/auth.module");
+const stats_module_1 = require("./modules/stats/stats.module");
 const event_gallery_items_module_1 = require("./modules/event-gallery-items/event-gallery-items.module");
 const mentor_talks_module_1 = require("./modules/mentor-talks/mentor-talks.module");
+const activity_module_1 = require("./modules/activity/activity.module");
+const deploy_module_1 = require("./modules/deploy/deploy.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -36,6 +39,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             supabase_module_1.SupabaseModule,
             auth_module_1.AuthModule,
+            stats_module_1.StatsModule,
             media_module_1.MediaModule,
             hero_module_1.HeroModule,
             programs_module_1.ProgramsModule,
@@ -46,6 +50,8 @@ exports.AppModule = AppModule = __decorate([
             about_module_1.AboutModule,
             event_gallery_items_module_1.EventGalleryItemsModule,
             mentor_talks_module_1.MentorTalksModule,
+            activity_module_1.ActivityModule,
+            deploy_module_1.DeployModule,
         ],
         controllers: [app_controller_1.AppController, health_controller_1.HealthController],
         providers: [database_health_service_1.DatabaseHealthService],

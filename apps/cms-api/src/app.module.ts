@@ -17,6 +17,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { EventGalleryItemsModule } from './modules/event-gallery-items/event-gallery-items.module';
 import { MentorTalksModule } from './modules/mentor-talks/mentor-talks.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { DeployModule } from './modules/deploy/deploy.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     EventGalleryItemsModule,
     MentorTalksModule,
     ActivityModule,
+    DeployModule,
     // Stats module
     // (imported dynamically to register controller/provider)
   ],

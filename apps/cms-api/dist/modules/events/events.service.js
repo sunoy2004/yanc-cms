@@ -82,6 +82,7 @@ let EventsService = EventsService_1 = class EventsService {
             const processedEvents = eventsWithMedia.map(event => ({
                 ...event,
                 category: event.category || 'upcoming',
+                isPublished: event.is_active ?? true,
                 isPast: new Date(event.event_date) < new Date(),
                 isUpcoming: new Date(event.event_date) >= new Date(),
                 year: new Date(event.event_date).getFullYear(),
@@ -101,9 +102,7 @@ let EventsService = EventsService_1 = class EventsService {
                 throw new Error('Supabase client not available');
             }
             this.logger.log('Creating new event');
-            const { data: newEvent, error: insertError } = await supabaseClient
-                .from('event_content')
-                .insert({
+            const basePayload = {
                 title: dto.title,
                 description: dto.description || '',
                 speaker: dto.speaker || '',
@@ -113,9 +112,31 @@ let EventsService = EventsService_1 = class EventsService {
                 type: dto.category,
                 is_active: dto.published ?? true,
                 display_order: dto.displayOrder || 0,
-            })
+            };
+            let insertPayload = {
+                ...basePayload,
+                registration_url: dto.registrationUrl || null,
+            };
+            let { data: newEvent, error: insertError } = await supabaseClient
+                .from('event_content')
+                .insert(insertPayload)
                 .select()
                 .single();
+            if (insertError && (insertError.message?.includes('registration_url') || insertError.message?.includes('column') && insertError.message?.includes('does not exist'))) {
+                this.logger.warn('registration_url column missing? Retrying without it. Run migration 10_add_event_registration_url.sql on event_content.');
+                insertPayload = basePayload;
+                const retry = await supabaseClient
+                    .from('event_content')
+                    .insert(insertPayload)
+                    .select()
+                    .single();
+                if (retry.error) {
+                    this.logger.error('Error creating event (retry):', retry.error);
+                    throw retry.error;
+                }
+                newEvent = retry.data;
+                insertError = null;
+            }
             if (insertError) {
                 this.logger.error('Error creating event:', insertError);
                 throw insertError;
@@ -182,18 +203,40 @@ let EventsService = EventsService_1 = class EventsService {
                 updateData.location = dto.location;
             if (dto.eventDate !== undefined)
                 updateData.event_date = dto.eventDate;
+            if (dto.registrationUrl !== undefined)
+                updateData.registration_url = dto.registrationUrl || null;
             if (dto.category !== undefined)
                 updateData.category = dto.category;
             if (dto.published !== undefined)
                 updateData.is_active = dto.published;
             if (dto.displayOrder !== undefined)
                 updateData.display_order = dto.displayOrder;
-            const { data: updatedEvent, error: updateError } = await supabaseClient
+            let updatedEvent = null;
+            let updateError = null;
+            let result = await supabaseClient
                 .from('event_content')
                 .update(updateData)
                 .eq('id', id)
                 .select()
                 .single();
+            updateError = result.error;
+            updatedEvent = result.data;
+            if (updateError && updateData.registration_url !== undefined && (updateError.message?.includes('registration_url') || (updateError.message?.includes('column') && updateError.message?.includes('does not exist')))) {
+                this.logger.warn('registration_url column missing? Retrying update without it. Run migration 10_add_event_registration_url.sql on event_content.');
+                const { registration_url: _r, ...rest } = updateData;
+                result = await supabaseClient
+                    .from('event_content')
+                    .update(rest)
+                    .eq('id', id)
+                    .select()
+                    .single();
+                if (result.error) {
+                    this.logger.error('Error updating event (retry):', result.error);
+                    throw result.error;
+                }
+                updatedEvent = result.data;
+                updateError = null;
+            }
             if (updateError) {
                 this.logger.error('Error updating event:', updateError);
                 throw updateError;
@@ -275,6 +318,33 @@ let EventsService = EventsService_1 = class EventsService {
         catch (error) {
             this.logger.error('Error in deleteEvent:', error);
             throw error;
+        }
+    }
+    async deletePastUpcomingEvents() {
+        try {
+            const supabaseClient = this.supabase.getClient();
+            if (!supabaseClient)
+                return 0;
+            const now = new Date().toISOString();
+            const { data, error } = await supabaseClient
+                .from('event_content')
+                .delete()
+                .eq('category', 'upcoming')
+                .lt('event_date', now)
+                .select('id');
+            if (error) {
+                this.logger.warn('Error deleting past upcoming events', error);
+                return 0;
+            }
+            const count = Array.isArray(data) ? data.length : 0;
+            if (count > 0) {
+                this.logger.log(`✅ Deleted ${count} past upcoming event(s) from Supabase`);
+            }
+            return count;
+        }
+        catch (err) {
+            this.logger.warn('deletePastUpcomingEvents failed', err);
+            return 0;
         }
     }
 };

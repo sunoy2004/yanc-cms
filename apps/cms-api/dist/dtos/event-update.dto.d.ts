@@ -4,6 +4,7 @@ export declare class UpdateEventDto {
     speaker?: string;
     location?: string;
     eventDate?: string;
+    registrationUrl?: string;
     category?: 'upcoming' | 'past';
     published?: boolean;
     displayOrder?: number;

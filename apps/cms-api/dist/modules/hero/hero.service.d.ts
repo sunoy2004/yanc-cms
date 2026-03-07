@@ -8,6 +8,7 @@ export declare class HeroService {
     getHeroContent(): Promise<any>;
     createHeroContent(dto: CreateHeroDto): Promise<any>;
     updateHeroContent(id: string, dto: UpdateHeroDto): Promise<any>;
+    private buildHeroResponse;
     deleteHeroContent(id: string): Promise<{
         success: boolean;
         message: string;

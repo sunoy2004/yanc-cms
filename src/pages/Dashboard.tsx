@@ -9,11 +9,15 @@ import {
   Image,
   Clock,
   TrendingUp,
+  Rocket,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { useEffect, useState } from 'react';
 import { apiService } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 type Stat = { total: number; published: number; trend?: number };
 
@@ -75,6 +79,7 @@ const quickActions = [
 ];
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const getActionColor = (action: string) => {
     switch (action) {
       case 'create':
@@ -90,6 +95,7 @@ export default function Dashboard() {
     }
   };
   const [stats, setStats] = useState(initialStats);
+  const [isTriggeringBuild, setIsTriggeringBuild] = useState(false);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -112,6 +118,25 @@ export default function Dashboard() {
       mounted = false;
     };
   }, []);
+
+  const handleTriggerBuild = async () => {
+    setIsTriggeringBuild(true);
+    try {
+      const result = await apiService.triggerWebsiteBuild();
+      toast({
+        title: 'Website build triggered',
+        description: result?.message || 'The website build has been started in GCP.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to trigger build',
+        description: error?.message || 'Please check the server logs or webhook configuration.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTriggeringBuild(false);
+    }
+  };
 
   const [recentActivity, setRecentActivity] = useState<
     {
@@ -146,6 +171,26 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="Welcome back! Here's an overview of your content."
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTriggerBuild}
+            disabled={isTriggeringBuild}
+          >
+            {isTriggeringBuild ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Triggering build...
+              </>
+            ) : (
+              <>
+                <Rocket className="mr-2 h-4 w-4" />
+                Trigger website build
+              </>
+            )}
+          </Button>
+        }
       />
 
       {/* Stats Grid */}
