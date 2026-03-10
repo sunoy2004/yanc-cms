@@ -320,7 +320,7 @@ let EventsService = EventsService_1 = class EventsService {
             throw error;
         }
     }
-    async deletePastUpcomingEvents() {
+    async draftPastUpcomingEvents() {
         try {
             const supabaseClient = this.supabase.getClient();
             if (!supabaseClient)
@@ -328,22 +328,22 @@ let EventsService = EventsService_1 = class EventsService {
             const now = new Date().toISOString();
             const { data, error } = await supabaseClient
                 .from('event_content')
-                .delete()
+                .update({ is_active: false })
                 .eq('category', 'upcoming')
                 .lt('event_date', now)
                 .select('id');
             if (error) {
-                this.logger.warn('Error deleting past upcoming events', error);
+                this.logger.warn('Error drafting past upcoming events', error);
                 return 0;
             }
             const count = Array.isArray(data) ? data.length : 0;
             if (count > 0) {
-                this.logger.log(`✅ Deleted ${count} past upcoming event(s) from Supabase`);
+                this.logger.log(`✅ Drafted ${count} past upcoming event(s) (is_active=false)`);
             }
             return count;
         }
         catch (err) {
-            this.logger.warn('deletePastUpcomingEvents failed', err);
+            this.logger.warn('draftPastUpcomingEvents failed', err);
             return 0;
         }
     }

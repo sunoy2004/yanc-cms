@@ -372,8 +372,12 @@ export class EventsService {
     }
   }
 
-  /** Delete upcoming events whose event_date has passed. Called when fetching upcoming list. */
-  async deletePastUpcomingEvents(): Promise<number> {
+  /**
+   * Automatically draft upcoming events whose event_date has passed.
+   * Instead of deleting rows, we set is_active = false so they remain
+   * visible in the CMS (as Draft) and can be manually deleted.
+   */
+  async draftPastUpcomingEvents(): Promise<number> {
     try {
       const supabaseClient = this.supabase.getClient();
       if (!supabaseClient) return 0;
@@ -381,22 +385,22 @@ export class EventsService {
       const now = new Date().toISOString();
       const { data, error } = await supabaseClient
         .from('event_content')
-        .delete()
+        .update({ is_active: false })
         .eq('category', 'upcoming')
         .lt('event_date', now)
         .select('id');
 
       if (error) {
-        this.logger.warn('Error deleting past upcoming events', error);
+        this.logger.warn('Error drafting past upcoming events', error);
         return 0;
       }
       const count = Array.isArray(data) ? data.length : 0;
       if (count > 0) {
-        this.logger.log(`✅ Deleted ${count} past upcoming event(s) from Supabase`);
+        this.logger.log(`✅ Drafted ${count} past upcoming event(s) (is_active=false)`);
       }
       return count;
     } catch (err) {
-      this.logger.warn('deletePastUpcomingEvents failed', err);
+      this.logger.warn('draftPastUpcomingEvents failed', err);
       return 0;
     }
   }

@@ -9,5 +9,5 @@ export declare class EventsService {
     createEvent(dto: CreateEventDto): Promise<any[]>;
     updateEvent(id: string, dto: UpdateEventDto): Promise<any[]>;
     deleteEvent(id: string): Promise<boolean>;
-    deletePastUpcomingEvents(): Promise<number>;
+    draftPastUpcomingEvents(): Promise<number>;
 }

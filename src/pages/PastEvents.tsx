@@ -78,6 +78,8 @@ export default function PastEventsPage() {
   const pageConfig = getPageConfig();
   const filteredEvents = events;
 
+  const today = new Date().toISOString().split('T')[0];
+
   // API may return event_date / is_active (snake_case); support both for display
   const getEventDate = (item: Event & { event_date?: string }) =>
     item.eventDate || item.event_date;
@@ -385,6 +387,7 @@ export default function PastEventsPage() {
                     id="eventDate"
                     type="date"
                     value={formData.eventDate}
+                    max={today}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, eventDate: e.target.value }))
                     }
