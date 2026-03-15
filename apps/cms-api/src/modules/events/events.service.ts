@@ -17,6 +17,9 @@ export class EventsService {
         return [];
       }
 
+      // Auto-draft upcoming events whose date has passed (so they show as Draft in CMS)
+      await this.draftPastUpcomingEvents();
+
       // Get all events with their highlights
       const { data, error } = await supabaseClient
         .from('event_content')
@@ -91,15 +94,25 @@ export class EventsService {
       );
 
       // Add computed fields for frontend (include isPublished for CMS UI)
-      const processedEvents = eventsWithMedia.map(event => ({
-        ...event,
-        category: event.category || 'upcoming',
-        isPublished: event.is_active ?? true,
-        isPast: new Date(event.event_date) < new Date(),
-        isUpcoming: new Date(event.event_date) >= new Date(),
-        year: new Date(event.event_date).getFullYear(),
-        month: new Date(event.event_date).toLocaleString('default', { month: 'long' }),
-      }));
+      const now = new Date();
+      const processedEvents = eventsWithMedia.map(event => {
+        const category = event.category || 'upcoming';
+        const eventDate = new Date(event.event_date);
+        const isPast = eventDate < now;
+        // Past upcoming events are always shown as draft (unpublished)
+        const isUpcomingPast = category === 'upcoming' && isPast;
+        const isPublished = isUpcomingPast ? false : (event.is_active ?? true);
+        return {
+          ...event,
+          category,
+          is_active: isUpcomingPast ? false : event.is_active,
+          isPublished,
+          isPast,
+          isUpcoming: eventDate >= now,
+          year: eventDate.getFullYear(),
+          month: eventDate.toLocaleString('default', { month: 'long' }),
+        };
+      });
 
       return processedEvents;
     } catch (error) {
@@ -383,10 +396,12 @@ export class EventsService {
       if (!supabaseClient) return 0;
 
       const now = new Date().toISOString();
+      // Only update rows that are currently published (is_active = true)
       const { data, error } = await supabaseClient
         .from('event_content')
         .update({ is_active: false })
         .eq('category', 'upcoming')
+        .eq('is_active', true)
         .lt('event_date', now)
         .select('id');
 
