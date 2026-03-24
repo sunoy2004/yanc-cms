@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsNumber, IsOptional, IsUUID, IsArray } from 'class-validator';
+import { IsString, IsBoolean, IsNumber, IsOptional, IsUUID, IsArray, IsDateString } from 'class-validator';
 
 export class CreateEventGalleryItemDto {
   @IsString()
@@ -8,6 +8,11 @@ export class CreateEventGalleryItemDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  /** ISO 8601 date (YYYY-MM-DD) or full timestamp */
+  @IsDateString()
+  @IsOptional()
+  eventDate?: string;
 
   @IsArray()
   @IsUUID(undefined, { each: true })
@@ -31,6 +36,10 @@ export class UpdateEventGalleryItemDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsDateString()
+  @IsOptional()
+  eventDate?: string;
 
   @IsArray()
   @IsUUID(undefined, { each: true })

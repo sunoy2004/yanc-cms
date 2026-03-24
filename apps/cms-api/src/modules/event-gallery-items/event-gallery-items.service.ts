@@ -3,6 +3,18 @@ import { SupabaseService } from '../../supabase/supabase.service';
 import { CreateEventGalleryItemDto } from '../../dtos/event-gallery-item.dto';
 import { UpdateEventGalleryItemDto } from '../../dtos/event-gallery-item.dto';
 
+/** Map API `eventDate` (ISO string) to Postgres DATE `YYYY-MM-DD` or null */
+function toEventDateColumn(value?: string | null): string | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
+  return d.toISOString().slice(0, 10);
+}
+
 @Injectable()
 export class EventGalleryItemsService {
   private readonly logger = new Logger(EventGalleryItemsService.name);
@@ -47,6 +59,7 @@ export class EventGalleryItemsService {
         id: item.id,
         title: item.title,
         description: item.description,
+        eventDate: item.event_date ?? null,
         media: item.event_gallery_item_media?.map(mediaItem => ({
           id: mediaItem.media.id,
           url: mediaItem.media.storage_path ? 
@@ -86,6 +99,7 @@ export class EventGalleryItemsService {
       const insertData = {
         title: galleryItemData.title,
         description: galleryItemData.description,
+        event_date: toEventDateColumn(galleryItemData.eventDate),
         is_active: galleryItemData.isActive ?? true,
         display_order: galleryItemData.displayOrder ?? 0
       };
@@ -154,6 +168,9 @@ export class EventGalleryItemsService {
       const updateData: any = {};
       if (updateFields.title !== undefined) updateData.title = updateFields.title;
       if (updateFields.description !== undefined) updateData.description = updateFields.description;
+      if (updateFields.eventDate !== undefined) {
+        updateData.event_date = toEventDateColumn(updateFields.eventDate);
+      }
       if (updateFields.isActive !== undefined) updateData.is_active = updateFields.isActive;
       if (updateFields.displayOrder !== undefined) updateData.display_order = updateFields.displayOrder;
 

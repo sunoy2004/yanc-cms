@@ -666,6 +666,7 @@ CREATE TABLE IF NOT EXISTS event_gallery_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT,
   description TEXT,
+  event_date DATE,
   media_id UUID REFERENCES media(id) ON DELETE CASCADE,
   is_active BOOLEAN DEFAULT true,
   display_order INTEGER DEFAULT 0,
@@ -687,6 +688,7 @@ CREATE INDEX IF NOT EXISTS idx_event_content_type ON event_content(type);
 CREATE INDEX IF NOT EXISTS idx_event_content_is_active ON event_content(is_active);
 CREATE INDEX IF NOT EXISTS idx_event_gallery_items_is_active ON event_gallery_items(is_active);
 CREATE INDEX IF NOT EXISTS idx_event_gallery_items_display_order ON event_gallery_items(display_order);
+CREATE INDEX IF NOT EXISTS idx_event_gallery_items_event_date ON event_gallery_items(event_date DESC NULLS LAST);
 
 ALTER TABLE event_gallery_items ENABLE ROW LEVEL SECURITY;
 

@@ -14,7 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Image, Loader2, Save } from 'lucide-react';
+import { Plus, Image, Loader2, Save, Calendar } from 'lucide-react';
+import { format, parseISO, isValid } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { MediaItem } from '@/types/cms';
@@ -57,10 +58,23 @@ export default function EventGalleryPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    eventDate: '',
     gallery: [] as MediaItem[],
     isPublished: true,
     displayOrder: 0,
   });
+
+  const formatGalleryDate = (raw: string | null | undefined) => {
+    if (!raw) return '—';
+    try {
+      const d = typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw)
+        ? parseISO(raw)
+        : parseISO(String(raw));
+      return isValid(d) ? format(d, 'MMM d, yyyy') : '—';
+    } catch {
+      return '—';
+    }
+  };
 
   const getPageConfig = () => {
     return {
@@ -104,6 +118,16 @@ export default function EventGalleryPage() {
       ),
     },
     {
+      key: 'eventDate',
+      header: 'Date',
+      render: (item) => (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4 shrink-0" />
+          <span>{formatGalleryDate(item.eventDate ?? item.event_date)}</span>
+        </div>
+      ),
+    },
+    {
       key: 'media',
       header: 'Media',
       render: (item) => {
@@ -143,6 +167,7 @@ export default function EventGalleryPage() {
     setFormData({
       title: '',
       description: '',
+      eventDate: '',
       gallery: [],
       isPublished: true,
       displayOrder: galleryItems.length + 1,
@@ -152,9 +177,13 @@ export default function EventGalleryPage() {
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
+    const rawDate = (item.eventDate ?? item.event_date) as string | undefined;
+    const eventDateInput =
+      rawDate && /^\d{4}-\d{2}-\d{2}/.test(rawDate) ? rawDate.slice(0, 10) : '';
     setFormData({
       title: item.title || '',
       description: item.description || '',
+      eventDate: eventDateInput,
       gallery: getGalleryForForm(item),
       isPublished: getIsActive(item),
       displayOrder: item.displayOrder ?? 0,
@@ -229,13 +258,25 @@ export default function EventGalleryPage() {
 
     try {
       // Convert mediaIds array to the format expected by the service
-      const galleryItemData = {
+      const galleryItemData: {
+        title?: string;
+        description?: string;
+        eventDate?: string | null;
+        mediaIds?: string[];
+        isActive: boolean;
+        displayOrder: number;
+      } = {
         title: formData.title || undefined,
         description: formData.description || undefined,
         mediaIds: formData.gallery.length > 0 ? formData.gallery.map((item) => item.id).filter(Boolean) : undefined,
         isActive: formData.isPublished,
         displayOrder: formData.displayOrder,
       };
+      if (formData.eventDate?.trim()) {
+        galleryItemData.eventDate = formData.eventDate.trim();
+      } else if (editingItem) {
+        galleryItemData.eventDate = null;
+      }
 
       if (editingItem) {
         // Update existing gallery item
@@ -312,7 +353,7 @@ export default function EventGalleryPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title (Optional)</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -324,7 +365,7 @@ export default function EventGalleryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -334,6 +375,21 @@ export default function EventGalleryPage() {
                   placeholder="Enter description for this gallery item"
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="eventDate">Event date</Label>
+                <Input
+                  id="eventDate"
+                  type="date"
+                  value={formData.eventDate}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, eventDate: e.target.value }))
+                  }
+                />
+                <p className="text-sm text-muted-foreground">
+                  Shown on the public gallery; leave empty if not needed.
+                </p>
               </div>
 
               <div className="space-y-2">

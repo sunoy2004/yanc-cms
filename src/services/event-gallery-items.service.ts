@@ -3,6 +3,8 @@ export interface EventGalleryItem {
   id: string;
   title?: string;
   description?: string;
+  /** ISO date string (YYYY-MM-DD) from API */
+  eventDate?: string | null;
   media: Array<{
     id: string;
     url: string;
@@ -18,6 +20,7 @@ export interface EventGalleryItem {
 export interface CreateEventGalleryItemDto {
   title?: string;
   description?: string;
+  eventDate?: string | null;
   mediaIds?: string[]; // Changed from mediaId to mediaIds array
   isActive?: boolean;
   displayOrder?: number;
@@ -26,6 +29,7 @@ export interface CreateEventGalleryItemDto {
 export interface UpdateEventGalleryItemDto {
   title?: string;
   description?: string;
+  eventDate?: string | null;
   mediaIds?: string[]; // Changed from mediaId to mediaIds array
   isActive?: boolean;
   displayOrder?: number;
