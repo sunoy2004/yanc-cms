@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Loader2, Save, Linkedin, Twitter, Globe, Mail, Upload, X } from 'lucide-react';
+import { Plus, Loader2, Save, Linkedin, Twitter, Globe, Mail, Upload, X, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { TeamMember, SocialLink, MediaItem } from '@/types/cms';
 import { cn } from '@/lib/utils';
@@ -95,6 +95,8 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
   const { toast } = useToast();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [draggedMemberId, setDraggedMemberId] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const loadTeamMembers = async () => {
     const base = import.meta.env.VITE_CMS_BASE_URL || '';
@@ -193,15 +195,101 @@ export default function TeamManagementPage({ type = 'executive' }: TeamManagemen
   const getIsPublished = (item: TeamMember & { is_active?: boolean }) =>
     item.isPublished ?? (item as any).isPublished ?? (item as any).is_active ?? true;
 
+  const persistMemberOrder = async (
+    previousMembers: TeamMember[],
+    reorderedMembers: TeamMember[]
+  ) => {
+    const prevOrderMap = new Map(previousMembers.map((m) => [m.id, m.order ?? 0]));
+    const changed = reorderedMembers.filter(
+      (m) => (prevOrderMap.get(m.id) ?? 0) !== (m.order ?? 0)
+    );
+    if (changed.length === 0) return;
+
+    const base = import.meta.env.VITE_CMS_BASE_URL || '';
+    const token = localStorage.getItem('yanc_cms_token') || '';
+
+    setIsReordering(true);
+    try {
+      for (const member of changed) {
+        const response = await fetch(`${base}/api/team/${member.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ order: member.order }),
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to reorder "${member.name}": ${response.status} ${response.statusText}`
+          );
+        }
+      }
+
+      toast({
+        title: 'Order updated',
+        description: 'Team member order has been saved.',
+      });
+    } catch (error) {
+      setMembers(previousMembers);
+      toast({
+        title: 'Reorder failed',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Could not save the new order. Reverted to previous order.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleDropOnMember = async (targetMemberId: string) => {
+    if (!draggedMemberId || draggedMemberId === targetMemberId || isReordering) return;
+
+    const previousMembers = [...members];
+    const fromIndex = previousMembers.findIndex((m) => m.id === draggedMemberId);
+    const toIndex = previousMembers.findIndex((m) => m.id === targetMemberId);
+    if (fromIndex < 0 || toIndex < 0) return;
+
+    const reordered = [...previousMembers];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+
+    const withUpdatedOrder = reordered.map((member, index) => ({
+      ...member,
+      order: index + 1,
+    }));
+
+    setMembers(withUpdatedOrder);
+    setDraggedMemberId(null);
+    await persistMemberOrder(previousMembers, withUpdatedOrder);
+  };
+
   const columns: Column<TeamMember>[] = [
     {
       key: 'order',
       header: 'Order',
       className: 'w-16',
       render: (item) => (
-        <span className="text-sm text-muted-foreground">
-          {item.order ?? '-'}
-        </span>
+        <div
+          className={cn(
+            'flex items-center gap-2 rounded-md px-2 py-1',
+            draggedMemberId === item.id ? 'bg-muted/80' : 'bg-transparent',
+            isReordering ? 'opacity-60' : 'opacity-100'
+          )}
+          draggable={!isReordering}
+          onDragStart={() => setDraggedMemberId(item.id)}
+          onDragEnd={() => setDraggedMemberId(null)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => void handleDropOnMember(item.id)}
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">{item.order ?? '-'}</span>
+        </div>
       ),
     },
     {
