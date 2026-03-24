@@ -9,6 +9,13 @@ export class EventsService {
 
   constructor(private supabase: SupabaseService) {}
 
+  /** Local start-of-day boundary used for "past date" checks. */
+  private getTodayStartIso(): string {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+
   async getEvents() {
     try {
       const supabaseClient = this.supabase.getClient();
@@ -95,12 +102,14 @@ export class EventsService {
 
       // Add computed fields for frontend (include isPublished for CMS UI)
       const now = new Date();
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
       const processedEvents = eventsWithMedia.map(event => {
         const category = event.category || 'upcoming';
         const eventDate = new Date(event.event_date);
         const isPast = eventDate < now;
-        // Past upcoming events are always shown as draft (unpublished)
-        const isUpcomingPast = category === 'upcoming' && isPast;
+        // Draft only if date is before today (same-day/live events stay published)
+        const isUpcomingPast = category === 'upcoming' && eventDate < todayStart;
         const isPublished = isUpcomingPast ? false : (event.is_active ?? true);
         return {
           ...event,
@@ -395,14 +404,14 @@ export class EventsService {
       const supabaseClient = this.supabase.getClient();
       if (!supabaseClient) return 0;
 
-      const now = new Date().toISOString();
+      const todayStartIso = this.getTodayStartIso();
       // Only update rows that are currently published (is_active = true)
       const { data, error } = await supabaseClient
         .from('event_content')
         .update({ is_active: false })
         .eq('category', 'upcoming')
         .eq('is_active', true)
-        .lt('event_date', now)
+        .lt('event_date', todayStartIso)
         .select('id');
 
       if (error) {
