@@ -27,6 +27,7 @@ const event_gallery_items_module_1 = require("./modules/event-gallery-items/even
 const mentor_talks_module_1 = require("./modules/mentor-talks/mentor-talks.module");
 const activity_module_1 = require("./modules/activity/activity.module");
 const deploy_module_1 = require("./modules/deploy/deploy.module");
+const our_mentors_module_1 = require("./modules/our-mentors/our-mentors.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -50,6 +51,7 @@ exports.AppModule = AppModule = __decorate([
             about_module_1.AboutModule,
             event_gallery_items_module_1.EventGalleryItemsModule,
             mentor_talks_module_1.MentorTalksModule,
+            our_mentors_module_1.OurMentorsModule,
             activity_module_1.ActivityModule,
             deploy_module_1.DeployModule,
         ],

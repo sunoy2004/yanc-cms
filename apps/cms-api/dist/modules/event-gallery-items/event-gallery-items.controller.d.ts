@@ -8,6 +8,7 @@ export declare class EventGalleryItemsController {
         id: any;
         title: any;
         description: any;
+        eventDate: any;
         media: any;
         isActive: any;
         displayOrder: any;
@@ -18,6 +19,7 @@ export declare class EventGalleryItemsController {
         id: any;
         title: any;
         description: any;
+        eventDate: any;
         media: any;
         isActive: any;
         displayOrder: any;
@@ -28,6 +30,7 @@ export declare class EventGalleryItemsController {
         id: any;
         title: any;
         description: any;
+        eventDate: any;
         media: any;
         isActive: any;
         displayOrder: any;
@@ -38,6 +41,7 @@ export declare class EventGalleryItemsController {
         id: any;
         title: any;
         description: any;
+        eventDate: any;
         media: any;
         isActive: any;
         displayOrder: any;
@@ -49,6 +53,7 @@ export declare class EventGalleryItemsController {
         id: any;
         title: any;
         description: any;
+        eventDate: any;
         media: any;
         isActive: any;
         displayOrder: any;

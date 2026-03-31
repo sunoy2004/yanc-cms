@@ -25,6 +25,11 @@ __decorate([
     __metadata("design:type", String)
 ], CreateEventGalleryItemDto.prototype, "description", void 0);
 __decorate([
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateEventGalleryItemDto.prototype, "eventDate", void 0);
+__decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsUUID)(undefined, { each: true }),
     (0, class_validator_1.IsOptional)(),
@@ -53,6 +58,11 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateEventGalleryItemDto.prototype, "description", void 0);
+__decorate([
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateEventGalleryItemDto.prototype, "eventDate", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsUUID)(undefined, { each: true }),

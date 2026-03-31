@@ -18,6 +18,11 @@ let EventsService = EventsService_1 = class EventsService {
         this.supabase = supabase;
         this.logger = new common_1.Logger(EventsService_1.name);
     }
+    getTodayStartIso() {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString();
+    }
     async getEvents() {
         try {
             const supabaseClient = this.supabase.getClient();
@@ -25,6 +30,7 @@ let EventsService = EventsService_1 = class EventsService {
                 this.logger.warn('Supabase client not available, returning empty events');
                 return [];
             }
+            await this.draftPastUpcomingEvents();
             const { data, error } = await supabaseClient
                 .from('event_content')
                 .select(`
@@ -79,15 +85,26 @@ let EventsService = EventsService_1 = class EventsService {
                 }
                 return { ...event, mediaItems: [] };
             }));
-            const processedEvents = eventsWithMedia.map(event => ({
-                ...event,
-                category: event.category || 'upcoming',
-                isPublished: event.is_active ?? true,
-                isPast: new Date(event.event_date) < new Date(),
-                isUpcoming: new Date(event.event_date) >= new Date(),
-                year: new Date(event.event_date).getFullYear(),
-                month: new Date(event.event_date).toLocaleString('default', { month: 'long' }),
-            }));
+            const now = new Date();
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const processedEvents = eventsWithMedia.map(event => {
+                const category = event.category || 'upcoming';
+                const eventDate = new Date(event.event_date);
+                const isPast = eventDate < now;
+                const isUpcomingPast = category === 'upcoming' && eventDate < todayStart;
+                const isPublished = isUpcomingPast ? false : (event.is_active ?? true);
+                return {
+                    ...event,
+                    category,
+                    is_active: isUpcomingPast ? false : event.is_active,
+                    isPublished,
+                    isPast,
+                    isUpcoming: eventDate >= now,
+                    year: eventDate.getFullYear(),
+                    month: eventDate.toLocaleString('default', { month: 'long' }),
+                };
+            });
             return processedEvents;
         }
         catch (error) {
@@ -325,12 +342,13 @@ let EventsService = EventsService_1 = class EventsService {
             const supabaseClient = this.supabase.getClient();
             if (!supabaseClient)
                 return 0;
-            const now = new Date().toISOString();
+            const todayStartIso = this.getTodayStartIso();
             const { data, error } = await supabaseClient
                 .from('event_content')
                 .update({ is_active: false })
                 .eq('category', 'upcoming')
-                .lt('event_date', now)
+                .eq('is_active', true)
+                .lt('event_date', todayStartIso)
                 .select('id');
             if (error) {
                 this.logger.warn('Error drafting past upcoming events', error);

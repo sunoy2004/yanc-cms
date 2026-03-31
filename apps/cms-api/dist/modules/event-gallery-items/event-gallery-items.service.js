@@ -13,6 +13,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventGalleryItemsService = void 0;
 const common_1 = require("@nestjs/common");
 const supabase_service_1 = require("../../supabase/supabase.service");
+function toEventDateColumn(value) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) {
+        return null;
+    }
+    return d.toISOString().slice(0, 10);
+}
 let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryItemsService {
     constructor(supabase) {
         this.supabase = supabase;
@@ -47,6 +57,7 @@ let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryIt
                 id: item.id,
                 title: item.title,
                 description: item.description,
+                eventDate: item.event_date ?? null,
                 media: item.event_gallery_item_media?.map(mediaItem => ({
                     id: mediaItem.media.id,
                     url: mediaItem.media.storage_path ?
@@ -80,6 +91,7 @@ let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryIt
             const insertData = {
                 title: galleryItemData.title,
                 description: galleryItemData.description,
+                event_date: toEventDateColumn(galleryItemData.eventDate),
                 is_active: galleryItemData.isActive ?? true,
                 display_order: galleryItemData.displayOrder ?? 0
             };
@@ -135,6 +147,9 @@ let EventGalleryItemsService = EventGalleryItemsService_1 = class EventGalleryIt
                 updateData.title = updateFields.title;
             if (updateFields.description !== undefined)
                 updateData.description = updateFields.description;
+            if (updateFields.eventDate !== undefined) {
+                updateData.event_date = toEventDateColumn(updateFields.eventDate);
+            }
             if (updateFields.isActive !== undefined)
                 updateData.is_active = updateFields.isActive;
             if (updateFields.displayOrder !== undefined)

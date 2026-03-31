@@ -5,6 +5,7 @@ export declare class EventsService {
     private supabase;
     private readonly logger;
     constructor(supabase: SupabaseService);
+    private getTodayStartIso;
     getEvents(): Promise<any[]>;
     createEvent(dto: CreateEventDto): Promise<any[]>;
     updateEvent(id: string, dto: UpdateEventDto): Promise<any[]>;
