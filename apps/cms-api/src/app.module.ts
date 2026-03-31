@@ -18,6 +18,7 @@ import { EventGalleryItemsModule } from './modules/event-gallery-items/event-gal
 import { MentorTalksModule } from './modules/mentor-talks/mentor-talks.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { DeployModule } from './modules/deploy/deploy.module';
+import { OurMentorsModule } from './modules/our-mentors/our-mentors.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DeployModule } from './modules/deploy/deploy.module';
     AboutModule,
     EventGalleryItemsModule,
     MentorTalksModule,
+    OurMentorsModule,
     ActivityModule,
     DeployModule,
     // Stats module

@@ -51,7 +51,14 @@ import { useAuth } from '@/contexts/AuthContext';
      ],
    },
    { title: 'Programs', href: '/programs', icon: GraduationCap },
-   { title: 'Mentor Talks', href: '/mentor-talks', icon: Mic },
+   {
+     title: 'Mentors',
+     icon: Globe,
+     children: [
+       { title: 'Mentor Talks', href: '/mentor-talks', icon: Mic },
+       { title: 'Our Mentors', href: '/mentors/our-mentors', icon: Users },
+     ],
+   },
    {
      title: 'Team Management',
      icon: Users,
@@ -83,7 +90,7 @@ import { useAuth } from '@/contexts/AuthContext';
  export function CMSSidebar({ isCollapsed = false, onToggle }: CMSSidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
-   const [openSections, setOpenSections] = useState<string[]>(['Events', 'Team Management', 'Content Sections']);
+  const [openSections, setOpenSections] = useState<string[]>(['Events', 'Mentors', 'Team Management', 'Content Sections']);
  
    const toggleSection = (title: string) => {
      setOpenSections(prev =>

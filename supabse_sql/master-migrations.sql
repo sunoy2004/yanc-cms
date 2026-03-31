@@ -102,6 +102,18 @@ CREATE TABLE IF NOT EXISTS mentor_talks (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create Our Mentors table (for public website "Our Mentors" section)
+-- Stores just the mentor name and associated image (media_id) for now.
+CREATE TABLE IF NOT EXISTS our_mentors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  media_id UUID REFERENCES media(id) ON DELETE SET NULL,
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create Team Members table
 CREATE TABLE IF NOT EXISTS team_members (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -415,6 +427,8 @@ CREATE INDEX IF NOT EXISTS idx_hero_content_active ON hero_content(is_active);
 CREATE INDEX IF NOT EXISTS idx_program_content_active ON program_content(is_active);
 CREATE INDEX IF NOT EXISTS idx_event_content_active ON event_content(is_active);
 CREATE INDEX IF NOT EXISTS idx_mentor_talks_active ON mentor_talks(is_active);
+CREATE INDEX IF NOT EXISTS idx_our_mentors_active ON our_mentors(is_active);
+CREATE INDEX IF NOT EXISTS idx_our_mentors_display_order ON our_mentors(display_order);
 CREATE INDEX IF NOT EXISTS idx_team_members_active ON team_members(is_active);
 CREATE INDEX IF NOT EXISTS idx_founders_active ON founders(is_active);
 CREATE INDEX IF NOT EXISTS idx_testimonials_active ON testimonials(is_active);
@@ -447,6 +461,7 @@ ALTER TABLE program_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mentor_talks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE our_mentors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE founders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
@@ -484,6 +499,13 @@ CREATE POLICY "Service role can access event_gallery" ON event_gallery
   FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role can access mentor_talks" ON mentor_talks
   FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Service role can access our_mentors" ON our_mentors
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Public can read only active mentors
+CREATE POLICY "Public can read active our_mentors" ON our_mentors
+  FOR SELECT USING (is_active = true);
 CREATE POLICY "Service role can access team_members" ON team_members
   FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role can access founders" ON founders
@@ -580,6 +602,10 @@ CREATE TRIGGER update_event_gallery_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_mentor_talks_updated_at 
   BEFORE UPDATE ON mentor_talks 
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_our_mentors_updated_at 
+  BEFORE UPDATE ON our_mentors 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_team_members_updated_at 
   BEFORE UPDATE ON team_members 

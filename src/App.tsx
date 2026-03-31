@@ -17,6 +17,7 @@ import EventGallery from "./pages/EventGallery";
 // import EventHighlights from "./pages/EventHighlights";
 import Programs from "./pages/Programs";
 import MentorTalks from "./pages/MentorTalks";
+import OurMentors from "./pages/OurMentors";
 import TeamManagement from "./pages/TeamManagement";
 import ContentSection from "./pages/ContentSection";
 import AboutUsManagement from "./pages/AboutUsManagement";
@@ -67,6 +68,7 @@ const App = () => (
               {/* Programs & Talks */}
               <Route path="/programs" element={<Programs />} />
               <Route path="/mentor-talks" element={<MentorTalks />} />
+              <Route path="/mentors/our-mentors" element={<OurMentors />} />
               
               {/* Team Management */}
               <Route path="/team/executive" element={<TeamManagement type="executive" />} />
